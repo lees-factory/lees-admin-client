@@ -1,5 +1,5 @@
 import { dev } from '$app/environment';
-import { fail, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -10,29 +10,16 @@ export const load: PageServerLoad = async ({ cookies }) => {
 };
 
 export const actions = {
-	login: async ({ request, cookies }) => {
-		const data = await request.formData();
-		const email = data.get('email');
-		const password = data.get('password');
-
-		// TODO: Implement actual auth validation with adapter
-		if (!email || !password) {
-			return fail(400, { error: 'Missing email or password' });
-		}
-
-		// Mock auth for now
-		if (email === 'admin@example.com' && password === 'password') {
-			cookies.set('session', 'admin-session-token', {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: !dev,
-				maxAge: 60 * 60 * 24 // 1 day
-			});
-			throw redirect(303, '/dashboard');
-		}
-
-		return fail(401, { error: 'Invalid credentials' });
+	// TODO: 실제 연동 시 adapter 검증 후 세션 발급
+	login: async ({ cookies }) => {
+		cookies.set('session', 'admin-session-token', {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: !dev,
+			maxAge: 60 * 60 * 24 // 1 day
+		});
+		throw redirect(303, '/dashboard');
 	},
 
 	devLogin: async ({ cookies }) => {
