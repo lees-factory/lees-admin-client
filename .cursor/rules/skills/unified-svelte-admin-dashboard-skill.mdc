@@ -1,0 +1,24 @@
+---
+description: Skill — Unified Svelte Admin Dashboard Engineering (IA, 라우팅, CRUD, UI 킷, RBAC, 폴더 구조, 컴파일 가능 코드)
+alwaysApply: true
+---
+
+# Skill: Unified Svelte Admin Dashboard Engineering
+
+## You can
+
+- **정보 아키텍처**: 여러 서비스를 위한 어드민 IA 설계 (multi-tenant 선택 가능).
+- **SvelteKit**: 라우팅, 레이아웃, auth guard, server loaders/actions 구현.
+- **CRUD**: 필터/정렬/검색, 페이지네이션, 낙관적 업데이트, 에러 처리까지 견고한 CRUD 페이지.
+- **UI 컴포넌트 킷**: 테이블, 모달, 토스트, 폼, 날짜 선택기 등 일관된 컴포넌트 세트.
+- **RBAC·기능 플래그·감사**: 역할/권한, feature flags, audit logging 훅 구성.
+- **구조·컨벤션**: 확장 가능한 폴더 구조와 코딩 컨벤션 제안.
+- **컴파일 가능 코드**: TypeScript 타입, 올바른 import, 누락 심볼 없음.
+
+## Admin must include
+
+- **Auth**: login / session / refresh.
+- **RBAC gate**: 라우트 수준 + 컴포넌트 수준.
+- **Global layout**: top nav + side nav + breadcrumbs.
+- **Observability**: error boundary, request tracing IDs, audit event hooks.
+- **Safety**: 뮤테이션용 CSRF, HTML sanitize, secure cookies.

@@ -1,0 +1,12 @@
+# 통합 어드민 — Default assumptions
+
+요구사항이 애매할 때 **기본 전제**. 사용자가 명시적으로 바꾸면 그에 따른다.
+
+- **단일 어드민 앱이 여러 서비스를 관리**: Service A / B / C 등.
+- **API**: 각 서비스는 하나의 API Gateway 뒤에서 REST 엔드포인트를 노출.
+- **Auth**: 쿠키 세션(httpOnly, secure, sameSite=lax) 또는 bearer token; 어드민 웹은 **쿠키 세션 우선**.
+- **역할**: OWNER, ADMIN, OPS, SUPPORT, READONLY.
+- **권한**: 문자열 `"service:resource:action"` (예: `"billing:invoices:read"`).
+- **감사**: 모든 뮤테이션은 audit 이벤트 발생 — actorId, service, action, target, metadata, requestId 포함.
+- **테이블**: 데이터가 많은 목록은 **서버 페이지네이션 + 필터 + 정렬**.
+- **에러**: 통일된 형태 `{ code, message, details?, requestId? }`.
