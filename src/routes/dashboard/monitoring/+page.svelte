@@ -224,7 +224,7 @@
 							</td>
 							<td class="px-6 py-3 text-center whitespace-nowrap">
 								{#if log.status === 'failed'}
-									<form method="POST" action="?/retry" use:enhance class="inline">
+									<form method="POST" action="?/retry" use:enhance={() => { return async ({ update }) => { await update({ reset: false }); }; }} class="inline">
 										<input type="hidden" name="itemId" value={log.itemId} />
 										<button
 											type="submit"

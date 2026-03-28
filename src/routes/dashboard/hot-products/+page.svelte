@@ -32,16 +32,16 @@
 				crawl: `${f.market && f.market !== 'all' ? marketLabels[f.market] + ' ' : ''}${f.count ?? ''}건 수집을 시작했습니다.`,
 				toggleActive: '노출 상태가 변경되었습니다.'
 			};
-			toast = { message: messages[f.action] ?? '완료되었습니다.', type: 'success' };
+			showToast(messages[f.action] ?? '완료되었습니다.', 'success');
 		} else if (form?.error) {
-			toast = { message: form.error as string, type: 'error' };
-		}
-
-		if (toast) {
-			const timer = setTimeout(() => (toast = null), 3000);
-			return () => clearTimeout(timer);
+			showToast(form.error as string, 'error');
 		}
 	});
+
+	function showToast(message: string, type: 'success' | 'error') {
+		toast = { message, type };
+		setTimeout(() => (toast = null), 3000);
+	}
 
 	function applyMarketFilter(market: string) {
 		const params = new URLSearchParams();
@@ -217,7 +217,7 @@
 								{formatDateTime(product.lastCrawledAt)}
 							</td>
 							<td class="px-5 py-3.5 text-center">
-								<form method="POST" action="?/toggleActive" use:enhance class="inline">
+								<form method="POST" action="?/toggleActive" use:enhance={() => { return async ({ update }) => { await update({ reset: false }); }; }} class="inline">
 									<input type="hidden" name="id" value={product.id} />
 									<input type="hidden" name="active" value={product.active ? 'false' : 'true'} />
 									<button
