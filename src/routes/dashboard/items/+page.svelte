@@ -6,20 +6,16 @@
 	let { data } = $props();
 
 	let marketInit = $derived(data.filters.market);
-	let statusInit = $derived(data.filters.status);
 
 	let marketFilter = $state<string>('all');
-	let statusFilter = $state<string>('all');
 
 	$effect(() => {
 		marketFilter = marketInit;
-		statusFilter = statusInit;
 	});
 
 	function applyFilters() {
 		const params = new URLSearchParams();
 		if (marketFilter !== 'all') params.set('market', marketFilter);
-		if (statusFilter !== 'all') params.set('status', statusFilter);
 		params.set('page', '1');
 		goto(`/dashboard/items?${params.toString()}`);
 	}
@@ -65,24 +61,6 @@
 			label: 'G-Market',
 			color: 'bg-emerald-500/10 text-emerald-600',
 			dot: 'bg-emerald-500'
-		}
-	};
-
-	const statusConfig: Record<string, { label: string; color: string; iconPath: string }> = {
-		success: {
-			label: '성공',
-			color: 'text-emerald-600 bg-emerald-500/10',
-			iconPath: 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-		},
-		failed: {
-			label: '실패',
-			color: 'text-rose-600 bg-rose-500/10',
-			iconPath: 'M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-		},
-		pending: {
-			label: '대기',
-			color: 'text-slate-500 bg-slate-500/10',
-			iconPath: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z'
 		}
 	};
 
@@ -135,19 +113,6 @@
 					<option value="gmarket">G-Market</option>
 				</select>
 			</div>
-			<div class="flex-1 sm:max-w-[180px]">
-				<label for="crawl-status" class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">수집 상태</label>
-				<select
-					id="crawl-status"
-					bind:value={statusFilter}
-					class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition-colors focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
-				>
-					<option value="all">전체 상태</option>
-					<option value="success">성공</option>
-					<option value="failed">실패</option>
-					<option value="pending">대기</option>
-				</select>
-			</div>
 			<button
 				type="submit"
 				class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
@@ -164,7 +129,6 @@
 	<div class="space-y-2">
 		{#each data.items.data as item (item.id)}
 			{@const market = marketConfig[item.market] ?? { label: item.market, color: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' }}
-			{@const status = statusConfig[item.crawlStatus] ?? statusConfig.pending}
 			{@const priceChange = getPriceChange(item)}
 			<div
 				class="group overflow-hidden rounded-xl border transition-all duration-200 {expandedItem === item.id
@@ -201,16 +165,6 @@
 							</p>
 						{/if}
 					</div>
-
-					<!-- Crawl Status -->
-					<span
-						class="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold {status.color}"
-					>
-						<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" d={status.iconPath} />
-						</svg>
-						{status.label}
-					</span>
 
 					<!-- Expand Icon -->
 					<svg
@@ -287,25 +241,6 @@
 								</div>
 							{/if}
 
-							<!-- Actions -->
-							<div class="mt-5 flex gap-2">
-								<button
-									class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.98]"
-								>
-									<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
-									</svg>
-									수동 수집
-								</button>
-								<button
-									class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-50 active:scale-[0.98]"
-								>
-									<svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-									</svg>
-									상품 페이지
-								</button>
-							</div>
 						</div>
 					</div>
 				{/if}

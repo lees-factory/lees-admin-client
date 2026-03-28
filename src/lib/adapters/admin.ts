@@ -666,12 +666,45 @@ export async function updateSettings(
 
 // ─── Hot Products ───────────────────────────────────────────
 
-export async function getHotProducts(): Promise<HotProduct[]> {
-	// TODO: GET /v1/admin/hot-products
-	return [...MOCK_HOT_PRODUCTS].sort((a, b) => a.rank - b.rank);
+export async function getHotProducts(params: {
+	page: number;
+	limit: number;
+	market?: Market | 'all';
+}): Promise<PaginatedResponse<HotProduct>> {
+	// TODO: GET /v1/admin/hot-products?page=&limit=&market=
+	let filtered = [...MOCK_HOT_PRODUCTS].sort((a, b) => a.rank - b.rank);
+
+	if (params.market && params.market !== 'all') {
+		filtered = filtered.filter((p) => p.market === params.market);
+	}
+
+	const total = filtered.length;
+	const start = (params.page - 1) * params.limit;
+	const data = filtered.slice(start, start + params.limit);
+
+	return {
+		data,
+		total,
+		page: params.page,
+		limit: params.limit,
+		totalPages: Math.ceil(total / params.limit)
+	};
 }
 
-export async function crawlAllHotProducts(): Promise<{ success: boolean; count: number }> {
-	// TODO: POST /v1/admin/hot-products/crawl-all
-	return { success: true, count: MOCK_HOT_PRODUCTS.filter((p) => p.active).length };
+export async function toggleHotProductActive(
+	_id: string,
+	_active: boolean
+): Promise<{ success: boolean }> {
+	// TODO: PATCH /v1/admin/hot-products/:id/active
+	return { success: true };
+}
+
+export async function crawlHotProducts(
+	market?: Market | 'all'
+): Promise<{ success: boolean; count: number }> {
+	// TODO: POST /v1/admin/hot-products/crawl  body: { market }
+	const targets = market && market !== 'all'
+		? MOCK_HOT_PRODUCTS.filter((p) => p.market === market)
+		: MOCK_HOT_PRODUCTS;
+	return { success: true, count: targets.length };
 }

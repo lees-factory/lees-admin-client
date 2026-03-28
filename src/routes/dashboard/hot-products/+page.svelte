@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
 	import type { ActionData } from './$types';
@@ -8,9 +10,29 @@
 	let toast = $state<{ message: string; type: 'success' | 'error' } | null>(null);
 	let isSubmitting = $state(false);
 
+	let marketInit = $derived(data.filters.market);
+	let marketFilter = $state<string>('all');
+
+	$effect(() => {
+		marketFilter = marketInit;
+	});
+
+	const marketLabels: Record<string, string> = {
+		all: '전체',
+		coupang: 'Coupang',
+		aliexpress: 'AliExpress',
+		amazon: 'Amazon',
+		gmarket: 'G-Market'
+	};
+
 	$effect(() => {
 		if (form?.success) {
-			toast = { message: `활성 상품 ${(form as any).count ?? ''}건 수집을 시작했습니다.`, type: 'success' };
+			const f = form as any;
+			const messages: Record<string, string> = {
+				crawl: `${f.market && f.market !== 'all' ? marketLabels[f.market] + ' ' : ''}${f.count ?? ''}건 수집을 시작했습니다.`,
+				toggleActive: '노출 상태가 변경되었습니다.'
+			};
+			toast = { message: messages[f.action] ?? '완료되었습니다.', type: 'success' };
 		} else if (form?.error) {
 			toast = { message: form.error as string, type: 'error' };
 		}
@@ -20,6 +42,21 @@
 			return () => clearTimeout(timer);
 		}
 	});
+
+	function applyMarketFilter(market: string) {
+		const params = new URLSearchParams();
+		if (market !== 'all') params.set('market', market);
+		params.set('page', '1');
+		goto(`/dashboard/hot-products?${params.toString()}`);
+	}
+
+	function goToPage(p: number) {
+		const params = new URLSearchParams($page.url.searchParams);
+		params.set('page', String(p));
+		goto(`/dashboard/hot-products?${params.toString()}`);
+	}
+
+	let activeCount = $derived(data.hotProducts.data.filter((p: any) => p.active).length);
 
 	function formatPrice(price: number, currency: string) {
 		if (currency === 'KRW') return price.toLocaleString('ko-KR') + '원';
@@ -60,7 +97,6 @@
 			icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z'
 		}
 	};
-
 </script>
 
 <div class="space-y-6" in:fade={{ duration: 200 }}>
@@ -83,12 +119,13 @@
 			<h2 class="text-2xl font-bold tracking-tight text-slate-900">핫 프로덕트 갱신</h2>
 			<p class="mt-1 text-sm text-slate-500">
 				메인홈 노출 상품 가격 수동 수집 &middot;
-				<span class="font-semibold text-slate-700">{data.hotProducts.length}</span>개 상품
+				<span class="font-semibold text-emerald-600">{activeCount}</span>개 노출 /
+				<span class="text-slate-700">{data.hotProducts.total}</span>개 전체
 			</p>
 		</div>
 		<form
 			method="POST"
-			action="?/crawlAll"
+			action="?/crawl"
 			use:enhance={() => {
 				isSubmitting = true;
 				return async ({ update }) => {
@@ -97,9 +134,10 @@
 				};
 			}}
 		>
+			<input type="hidden" name="market" value={marketFilter} />
 			<button
 				type="submit"
-				disabled={isSubmitting || data.hotProducts.length === 0}
+				disabled={isSubmitting || data.hotProducts.data.length === 0}
 				class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-slate-800 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
 			>
 				{#if isSubmitting}
@@ -112,10 +150,24 @@
 					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
 					</svg>
-					전체 수동 수집
+					{marketFilter === 'all' ? '전체' : marketLabels[marketFilter]} 수동 수집
 				{/if}
 			</button>
 		</form>
+	</div>
+
+	<!-- Filter -->
+	<div class="flex gap-1.5">
+		{#each [{ value: 'all', label: '전체' }, { value: 'coupang', label: 'Coupang' }, { value: 'aliexpress', label: 'AliExpress' }, { value: 'amazon', label: 'Amazon' }, { value: 'gmarket', label: 'G-Market' }] as f}
+			<button
+				onclick={() => applyMarketFilter(f.value)}
+				class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors {marketFilter === f.value
+					? 'bg-slate-900 text-white'
+					: 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+			>
+				{f.label}
+			</button>
+		{/each}
 	</div>
 
 	<!-- Products Table -->
@@ -128,16 +180,19 @@
 						<th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">상품명</th>
 						<th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">마켓</th>
 						<th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">현재가</th>
-						<th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">상태</th>
+						<th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">수집 상태</th>
 						<th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">마지막 수집</th>
+						<th class="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">노출</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-100">
-					{#each data.hotProducts as product, index (product.id)}
+					{#each data.hotProducts.data as product, index (product.id)}
 						{@const market = marketConfig[product.market] ?? { label: product.market, color: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' }}
 						{@const crawl = crawlStatusConfig[product.crawlStatus] ?? crawlStatusConfig.pending}
-						<tr class="transition-colors hover:bg-slate-50/50">
-							<td class="px-5 py-3.5 text-xs tabular-nums text-slate-400">{index + 1}</td>
+						<tr class="transition-colors hover:bg-slate-50/50 {product.active ? '' : 'opacity-50'}">
+							<td class="px-5 py-3.5 text-xs tabular-nums text-slate-400">
+								{(data.hotProducts.page - 1) * data.hotProducts.limit + index + 1}
+							</td>
 							<td class="max-w-[280px] px-5 py-3.5">
 								<p class="truncate text-sm font-medium text-slate-800">{product.productName}</p>
 							</td>
@@ -161,22 +216,92 @@
 							<td class="px-5 py-3.5 text-xs tabular-nums text-slate-500">
 								{formatDateTime(product.lastCrawledAt)}
 							</td>
+							<td class="px-5 py-3.5 text-center">
+								<form method="POST" action="?/toggleActive" use:enhance class="inline">
+									<input type="hidden" name="id" value={product.id} />
+									<input type="hidden" name="active" value={product.active ? 'false' : 'true'} />
+									<button
+										type="submit"
+										class="inline-flex items-center justify-center rounded-full transition-colors {product.active
+											? 'text-emerald-500 hover:text-emerald-600'
+											: 'text-slate-300 hover:text-slate-400'}"
+										title={product.active ? '미노출로 변경' : '노출로 변경'}
+										aria-label="{product.productName} {product.active ? '미노출로 변경' : '노출로 변경'}"
+									>
+										{#if product.active}
+											<svg class="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+												<path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+											</svg>
+										{:else}
+											<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+												<circle cx="12" cy="12" r="9.75" />
+											</svg>
+										{/if}
+									</button>
+								</form>
+							</td>
 						</tr>
 					{/each}
 
-					{#if data.hotProducts.length === 0}
+					{#if data.hotProducts.data.length === 0}
 						<tr>
-							<td colspan="6" class="px-6 py-16 text-center">
+							<td colspan="7" class="px-6 py-16 text-center">
 								<svg class="mx-auto size-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
 								</svg>
-								<p class="mt-3 text-sm font-medium text-slate-500">등록된 핫 프로덕트가 없습니다</p>
+								<p class="mt-3 text-sm font-medium text-slate-500">
+									{#if marketFilter !== 'all'}
+										해당 마켓의 핫 프로덕트가 없습니다
+									{:else}
+										등록된 핫 프로덕트가 없습니다
+									{/if}
+								</p>
 							</td>
 						</tr>
 					{/if}
 				</tbody>
 			</table>
 		</div>
+
+		<!-- Pagination -->
+		{#if data.hotProducts.totalPages > 1}
+			<div class="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+				<p class="text-xs tabular-nums text-slate-500">
+					<span class="font-medium text-slate-700">{(data.hotProducts.page - 1) * data.hotProducts.limit + 1}–{Math.min(data.hotProducts.page * data.hotProducts.limit, data.hotProducts.total)}</span>
+					/ {data.hotProducts.total}건
+				</p>
+				<div class="flex items-center gap-0.5">
+					<button
+						onclick={() => goToPage(data.hotProducts.page - 1)}
+						disabled={data.hotProducts.page <= 1}
+						class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+					>
+						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+						</svg>
+					</button>
+					{#each Array.from({ length: data.hotProducts.totalPages }, (_, i) => i + 1) as p}
+						<button
+							onclick={() => goToPage(p)}
+							class="size-8 rounded-lg text-xs font-semibold transition-colors {p === data.hotProducts.page
+								? 'bg-slate-900 text-white'
+								: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
+						>
+							{p}
+						</button>
+					{/each}
+					<button
+						onclick={() => goToPage(data.hotProducts.page + 1)}
+						disabled={data.hotProducts.page >= data.hotProducts.totalPages}
+						class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+					>
+						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+						</svg>
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Info -->
@@ -188,7 +313,8 @@
 			<div class="text-sm text-blue-700">
 				<p class="font-medium">수동 수집 안내</p>
 				<ul class="mt-1.5 list-inside list-disc space-y-0.5 text-xs text-blue-600">
-					<li><strong>전체 수동 수집</strong> 클릭 시 활성 상품의 가격을 즉시 갱신합니다.</li>
+					<li><strong>전체 수동 수집</strong> 클릭 시 모든 상품의 가격을 즉시 갱신합니다.</li>
+					<li><strong>노출</strong> 토글로 메인홈 노출 여부를 개별 제어할 수 있습니다.</li>
 					<li>수집 결과는 메인홈에 실시간 반영됩니다.</li>
 				</ul>
 			</div>

@@ -4,24 +4,17 @@ import { getTrackedItems } from '$lib/adapters/admin';
 import type { Market } from '$lib/adapters/admin';
 
 const VALID_MARKETS = ['all', 'coupang', 'aliexpress', 'amazon', 'gmarket'];
-const VALID_STATUSES = ['all', 'success', 'failed', 'pending'];
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1') || 1);
 	const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get('limit') ?? '10') || 10));
 	const marketRaw = url.searchParams.get('market') ?? 'all';
-	const statusRaw = url.searchParams.get('status') ?? 'all';
 
 	const market = (VALID_MARKETS.includes(marketRaw) ? marketRaw : 'all') as Market | 'all';
-	const status = (VALID_STATUSES.includes(statusRaw) ? statusRaw : 'all') as
-		| 'success'
-		| 'failed'
-		| 'pending'
-		| 'all';
 
 	try {
-		const items = await getTrackedItems({ page, limit, market, status });
-		return { items, filters: { market, status } };
+		const items = await getTrackedItems({ page, limit, market });
+		return { items, filters: { market } };
 	} catch (e) {
 		throw error(500, '추적 상품 데이터를 불러오는데 실패했습니다.');
 	}

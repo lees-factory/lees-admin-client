@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
+	import type { ActionData } from './$types';
 
-	let { data } = $props();
+	let { data, form }: { data: any; form: ActionData } = $props();
 
 	let marketInit = $derived(data.filters.market);
 	let statusInit = $derived(data.filters.status);
@@ -125,19 +127,28 @@
 	</div>
 
 	<!-- Crawl Logs -->
-	<div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-900/5">
-		<div class="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+	<div class="space-y-3">
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 			<h3 class="text-base font-semibold text-slate-900">크롤링 로그</h3>
-			<form
-				onsubmit={(e) => {
-					e.preventDefault();
-					applyFilters();
-				}}
-				class="flex gap-2"
-			>
+			<div class="flex items-center gap-3">
+				<!-- Status Filter Tabs -->
+				<div class="flex gap-1">
+					{#each [{ value: 'all', label: '전체' }, { value: 'success', label: '성공' }, { value: 'failed', label: '실패만' }] as f}
+						<button
+							onclick={() => { statusFilter = f.value; applyFilters(); }}
+							class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors {statusFilter === f.value
+								? f.value === 'failed' ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'
+								: 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+						>
+							{f.label}
+						</button>
+					{/each}
+				</div>
+				<!-- Market Filter -->
 				<select
 					bind:value={marketFilter}
-					class="rounded-md border border-slate-300 px-2 py-1.5 text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+					onchange={() => applyFilters()}
+					class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
 				>
 					<option value="all">전체 마켓</option>
 					<option value="coupang">Coupang</option>
@@ -145,22 +156,10 @@
 					<option value="amazon">Amazon</option>
 					<option value="gmarket">G-Market</option>
 				</select>
-				<select
-					bind:value={statusFilter}
-					class="rounded-md border border-slate-300 px-2 py-1.5 text-xs shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-				>
-					<option value="all">전체 상태</option>
-					<option value="success">성공</option>
-					<option value="failed">실패</option>
-				</select>
-				<button
-					type="submit"
-					class="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
-				>
-					필터
-				</button>
-			</form>
+			</div>
 		</div>
+
+	<div class="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-900/5">
 
 		<div class="overflow-x-auto">
 			<table class="min-w-full divide-y divide-slate-200">
@@ -184,6 +183,8 @@
 						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>에러</th
 						>
+						<th class="px-6 py-3 text-center text-xs font-medium tracking-wider text-slate-500 uppercase"
+						></th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-200 bg-white">
@@ -221,6 +222,22 @@
 							<td class="max-w-[200px] truncate px-6 py-3 text-xs text-rose-600">
 								{log.errorMessage ?? '-'}
 							</td>
+							<td class="px-6 py-3 text-center whitespace-nowrap">
+								{#if log.status === 'failed'}
+									<form method="POST" action="?/retry" use:enhance class="inline">
+										<input type="hidden" name="itemId" value={log.itemId} />
+										<button
+											type="submit"
+											class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-800"
+										>
+											<svg class="size-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true">
+												<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
+											</svg>
+											재시도
+										</button>
+									</form>
+								{/if}
+							</td>
 						</tr>
 					{/each}
 				</tbody>
@@ -254,5 +271,6 @@
 				</div>
 			</div>
 		{/if}
+	</div>
 	</div>
 </div>

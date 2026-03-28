@@ -37,20 +37,9 @@
 					</div>
 					<p class="ml-16 truncate text-sm font-medium text-slate-500">{stat.label}</p>
 				</dt>
-				<dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
+				<dd class="ml-16 pb-1 sm:pb-2">
 					<p class="text-2xl font-semibold text-slate-900">{stat.value}</p>
-					<p
-						class="ml-2 flex items-baseline text-sm font-semibold {stat.trend === 'up'
-							? 'text-green-600'
-							: 'text-red-600'}"
-					>
-						{stat.change}
-						{#if stat.trend === 'up'}
-							<span class="ml-1 text-xs" aria-hidden="true">↑</span>
-						{:else}
-							<span class="ml-1 text-xs" aria-hidden="true">↓</span>
-						{/if}
-					</p>
+					<p class="mt-0.5 text-xs text-slate-500">{stat.sub}</p>
 				</dd>
 			</div>
 		{/each}
@@ -63,9 +52,6 @@
 				<h3 class="text-base leading-6 font-semibold text-slate-900">최근 활동</h3>
 				<p class="mt-1 text-sm text-slate-500">Price Eye 최근 이벤트</p>
 			</div>
-			<span
-				class="inline-flex items-center rounded-md bg-blue-500/10 px-2 py-1 text-xs font-semibold text-blue-600"
-			>Live</span>
 		</div>
 		<div class="overflow-x-auto">
 			<table class="min-w-full divide-y divide-slate-200">
@@ -91,10 +77,8 @@
 							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{#if activity.status === 'success'}
 									<span class="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600">성공</span>
-								{:else if activity.status === 'warning'}
-									<span class="inline-flex items-center rounded-md bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-600">경고</span>
 								{:else}
-									<span class="inline-flex items-center rounded-md bg-rose-500/10 px-2 py-1 text-xs font-semibold text-rose-600">��패</span>
+									<span class="inline-flex items-center rounded-md bg-rose-500/10 px-2 py-1 text-xs font-semibold text-rose-600">실패</span>
 								{/if}
 							</td>
 							<td class="px-6 py-4 text-sm whitespace-nowrap text-slate-500">{activity.time}</td>
