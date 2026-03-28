@@ -8,7 +8,6 @@
 	let { data, form }: { data: any; form: ActionData } = $props();
 
 	let toast = $state<{ message: string; type: 'success' | 'error' } | null>(null);
-	let isSubmitting = $state(false);
 
 	let marketInit = $derived(data.filters.market);
 	let marketFilter = $state<string>('all');
@@ -17,22 +16,9 @@
 		marketFilter = marketInit;
 	});
 
-	const marketLabels: Record<string, string> = {
-		all: '전체',
-		coupang: 'Coupang',
-		aliexpress: 'AliExpress',
-		amazon: 'Amazon',
-		gmarket: 'G-Market'
-	};
-
 	$effect(() => {
 		if (form?.success) {
-			const f = form as any;
-			const messages: Record<string, string> = {
-				crawl: `${f.market && f.market !== 'all' ? marketLabels[f.market] + ' ' : ''}${f.count ?? ''}건 수집을 시작했습니다.`,
-				toggleActive: '노출 상태가 변경되었습니다.'
-			};
-			showToast(messages[f.action] ?? '완료되었습니다.', 'success');
+			showToast('노출 상태가 변경되었습니다.', 'success');
 		} else if (form?.error) {
 			showToast(form.error as string, 'error');
 		}
@@ -56,6 +42,18 @@
 		goto(`/dashboard/hot-products?${params.toString()}`);
 	}
 
+	function getPageNumbers(current: number, total: number): (number | '...')[] {
+		if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+		const pages: (number | '...')[] = [1];
+		if (current > 3) pages.push('...');
+		for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+			pages.push(i);
+		}
+		if (current < total - 2) pages.push('...');
+		pages.push(total);
+		return pages;
+	}
+
 	let activeCount = $derived(data.hotProducts.data.filter((p: any) => p.active).length);
 
 	function formatPrice(price: number, currency: string) {
@@ -77,7 +75,6 @@
 		coupang: { label: 'Coupang', color: 'bg-red-500/10 text-red-600', dot: 'bg-red-500' },
 		aliexpress: { label: 'AliExpress', color: 'bg-orange-500/10 text-orange-600', dot: 'bg-orange-500' },
 		amazon: { label: 'Amazon', color: 'bg-amber-500/10 text-amber-700', dot: 'bg-amber-500' },
-		gmarket: { label: 'G-Market', color: 'bg-emerald-500/10 text-emerald-600', dot: 'bg-emerald-500' }
 	};
 
 	const crawlStatusConfig: Record<string, { label: string; color: string; icon: string }> = {
@@ -116,49 +113,18 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
-			<h2 class="text-2xl font-bold tracking-tight text-slate-900">핫 프로덕트 갱신</h2>
+			<h2 class="text-2xl font-bold tracking-tight text-slate-900">핫 프로덕트 관리</h2>
 			<p class="mt-1 text-sm text-slate-500">
-				메인홈 노출 상품 가격 수동 수집 &middot;
+				크롤 데이터 정제 및 노출 관리 &middot;
 				<span class="font-semibold text-emerald-600">{activeCount}</span>개 노출 /
 				<span class="text-slate-700">{data.hotProducts.total}</span>개 전체
 			</p>
 		</div>
-		<form
-			method="POST"
-			action="?/crawl"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ update }) => {
-					isSubmitting = false;
-					await update();
-				};
-			}}
-		>
-			<input type="hidden" name="market" value={marketFilter} />
-			<button
-				type="submit"
-				disabled={isSubmitting || data.hotProducts.data.length === 0}
-				class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-slate-800 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-			>
-				{#if isSubmitting}
-					<svg class="size-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-					</svg>
-					수집 중…
-				{:else}
-					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183" />
-					</svg>
-					{marketFilter === 'all' ? '전체' : marketLabels[marketFilter]} 수동 수집
-				{/if}
-			</button>
-		</form>
 	</div>
 
 	<!-- Filter -->
 	<div class="flex gap-1.5">
-		{#each [{ value: 'all', label: '전체' }, { value: 'coupang', label: 'Coupang' }, { value: 'aliexpress', label: 'AliExpress' }, { value: 'amazon', label: 'Amazon' }, { value: 'gmarket', label: 'G-Market' }] as f}
+		{#each [{ value: 'all', label: '전체' }, { value: 'coupang', label: 'Coupang' }, { value: 'aliexpress', label: 'AliExpress' }, { value: 'amazon', label: 'Amazon' }] as f}
 			<button
 				onclick={() => applyMarketFilter(f.value)}
 				class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors {marketFilter === f.value
@@ -194,7 +160,10 @@
 								{(data.hotProducts.page - 1) * data.hotProducts.limit + index + 1}
 							</td>
 							<td class="max-w-[280px] px-5 py-3.5">
-								<p class="truncate text-sm font-medium text-slate-800">{product.productName}</p>
+								<a href={product.productUrl} target="_blank" rel="noopener noreferrer" class="group/link flex items-center gap-1 truncate text-sm font-medium text-slate-800 hover:text-blue-600 hover:underline">
+								{product.productName}
+								<svg class="size-3 shrink-0 text-slate-400 group-hover/link:text-blue-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+							</a>
 							</td>
 							<td class="px-5 py-3.5">
 								<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-semibold {market.color}">
@@ -265,41 +234,45 @@
 
 		<!-- Pagination -->
 		{#if data.hotProducts.totalPages > 1}
-			<div class="flex items-center justify-between border-t border-slate-200 px-4 py-3">
-				<p class="text-xs tabular-nums text-slate-500">
-					<span class="font-medium text-slate-700">{(data.hotProducts.page - 1) * data.hotProducts.limit + 1}–{Math.min(data.hotProducts.page * data.hotProducts.limit, data.hotProducts.total)}</span>
-					/ {data.hotProducts.total}건
-				</p>
-				<div class="flex items-center gap-0.5">
+			<div class="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-3">
+				<div class="flex items-center gap-1">
 					<button
 						onclick={() => goToPage(data.hotProducts.page - 1)}
 						disabled={data.hotProducts.page <= 1}
-						class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
 						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
 						</svg>
 					</button>
-					{#each Array.from({ length: data.hotProducts.totalPages }, (_, i) => i + 1) as p}
-						<button
-							onclick={() => goToPage(p)}
-							class="size-8 rounded-lg text-xs font-semibold transition-colors {p === data.hotProducts.page
-								? 'bg-slate-900 text-white'
-								: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
-						>
-							{p}
-						</button>
+					{#each getPageNumbers(data.hotProducts.page, data.hotProducts.totalPages) as p}
+						{#if p === '...'}
+							<span class="size-10 flex items-center justify-center text-sm text-slate-400">…</span>
+						{:else}
+							<button
+								onclick={() => goToPage(p as number)}
+								class="size-10 rounded-lg text-sm font-semibold transition-colors {p === data.hotProducts.page
+									? 'bg-slate-900 text-white shadow-sm'
+									: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
+							>
+								{p}
+							</button>
+						{/if}
 					{/each}
 					<button
 						onclick={() => goToPage(data.hotProducts.page + 1)}
 						disabled={data.hotProducts.page >= data.hotProducts.totalPages}
-						class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
 						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
 						</svg>
 					</button>
 				</div>
+				<p class="text-xs tabular-nums text-slate-500">
+					<span class="font-medium text-slate-700">{(data.hotProducts.page - 1) * data.hotProducts.limit + 1}–{Math.min(data.hotProducts.page * data.hotProducts.limit, data.hotProducts.total)}</span>
+					/ {data.hotProducts.total}건
+				</p>
 			</div>
 		{/if}
 	</div>
@@ -311,11 +284,10 @@
 				<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
 			</svg>
 			<div class="text-sm text-blue-700">
-				<p class="font-medium">수동 수집 안내</p>
+				<p class="font-medium">관리 안내</p>
 				<ul class="mt-1.5 list-inside list-disc space-y-0.5 text-xs text-blue-600">
-					<li><strong>전체 수동 수집</strong> 클릭 시 모든 상품의 가격을 즉시 갱신합니다.</li>
 					<li><strong>노출</strong> 토글로 메인홈 노출 여부를 개별 제어할 수 있습니다.</li>
-					<li>수집 결과는 메인홈에 실시간 반영됩니다.</li>
+					<li>수집/크롤은 <strong>크롤 메뉴</strong>에서 실행합니다.</li>
 				</ul>
 			</div>
 		</div>

@@ -3,7 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { getCrawlLogs, getMarketStatuses, triggerCrawl } from '$lib/adapters/admin';
 import type { Market } from '$lib/adapters/admin';
 
-const VALID_MARKETS = ['all', 'coupang', 'aliexpress', 'amazon', 'gmarket'];
+const VALID_MARKETS = ['all', 'coupang', 'aliexpress', 'amazon'];
 const VALID_STATUSES = ['all', 'success', 'failed'];
 
 export const load: PageServerLoad = async ({ url }) => {

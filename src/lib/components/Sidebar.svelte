@@ -16,6 +16,14 @@
 			]
 		},
 		{
+			title: '크롤',
+			items: [
+				{ name: '핫프로덕트 수집', href: '/dashboard/crawl/hot-products-fetch', icon: 'Download' },
+				{ name: '핫프로덕트 크롤', href: '/dashboard/crawl/hot-products-sku', icon: 'Bolt' },
+				{ name: '유저 아이템 크롤', href: '/dashboard/crawl/user-items', icon: 'Play' }
+			]
+		},
+		{
 			title: '모니터링',
 			items: [
 				{ name: '크롤링 현황', href: '/dashboard/monitoring', icon: 'Server' },
@@ -118,6 +126,12 @@
 								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
 							{:else if item.icon === 'ShoppingBag'}
 								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+							{:else if item.icon === 'Download'}
+							<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+						{:else if item.icon === 'Play'}
+								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
+							{:else if item.icon === 'Bolt'}
+								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
 							{:else if item.icon === 'Server'}
 								<svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 01-2 2v4a2 2 0 012 2h14a2 2 0 012-2v-4a2 2 0 01-2-2m-2-4h.01M17 16h.01" /></svg>
 							{:else if item.icon === 'Fire'}

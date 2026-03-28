@@ -26,6 +26,18 @@
 		goto(`/dashboard/items?${params.toString()}`);
 	}
 
+	function getPageNumbers(current: number, total: number): (number | '...')[] {
+		if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+		const pages: (number | '...')[] = [1];
+		if (current > 3) pages.push('...');
+		for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+			pages.push(i);
+		}
+		if (current < total - 2) pages.push('...');
+		pages.push(total);
+		return pages;
+	}
+
 	function formatPrice(price: number, currency: string) {
 		if (currency === 'KRW') return price.toLocaleString('ko-KR') + '원';
 		return '$' + price.toLocaleString();
@@ -57,11 +69,6 @@
 			color: 'bg-amber-500/10 text-amber-700',
 			dot: 'bg-amber-500'
 		},
-		gmarket: {
-			label: 'G-Market',
-			color: 'bg-emerald-500/10 text-emerald-600',
-			dot: 'bg-emerald-500'
-		}
 	};
 
 	let expandedItem = $state<string | null>(null);
@@ -110,7 +117,6 @@
 					<option value="coupang">Coupang</option>
 					<option value="aliexpress">AliExpress</option>
 					<option value="amazon">Amazon</option>
-					<option value="gmarket">G-Market</option>
 				</select>
 			</div>
 			<button
@@ -150,7 +156,15 @@
 
 					<!-- Product Info -->
 					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm font-medium text-slate-800 group-hover:text-slate-900">{item.productName}</p>
+						<p class="truncate text-sm font-medium text-slate-800 group-hover:text-slate-900">
+							<a
+								href={item.productUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								onclick={(e) => e.stopPropagation()}
+								class="hover:text-blue-600 hover:underline"
+							>{item.productName}<svg class="ml-1 inline size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></a>
+						</p>
 						<p class="mt-0.5 text-xs text-slate-400">{item.userEmail}</p>
 					</div>
 
@@ -260,41 +274,45 @@
 
 	<!-- Pagination -->
 	{#if data.items.totalPages > 1}
-		<div class="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
-			<p class="text-xs tabular-nums text-slate-500">
-				<span class="font-medium text-slate-700">{(data.items.page - 1) * data.items.limit + 1}–{Math.min(data.items.page * data.items.limit, data.items.total)}</span>
-				/ {data.items.total}건
-			</p>
-			<div class="flex items-center gap-0.5">
+		<div class="flex flex-col items-center gap-2 border-t border-slate-200 bg-white px-4 py-3 rounded-b-xl">
+			<div class="flex items-center gap-1">
 				<button
 					onclick={() => goToPage(data.items.page - 1)}
 					disabled={data.items.page <= 1}
-					class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+					class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 				>
 					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
 					</svg>
 				</button>
-				{#each Array.from({ length: data.items.totalPages }, (_, i) => i + 1) as p}
-					<button
-						onclick={() => goToPage(p)}
-						class="size-8 rounded-lg text-xs font-semibold transition-colors {p === data.items.page
-							? 'bg-slate-900 text-white'
-							: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
-					>
-						{p}
-					</button>
+				{#each getPageNumbers(data.items.page, data.items.totalPages) as p}
+					{#if p === '...'}
+						<span class="size-10 flex items-center justify-center text-sm text-slate-400">…</span>
+					{:else}
+						<button
+							onclick={() => goToPage(p as number)}
+							class="size-10 rounded-lg text-sm font-semibold transition-colors {p === data.items.page
+								? 'bg-slate-900 text-white shadow-sm'
+								: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
+						>
+							{p}
+						</button>
+					{/if}
 				{/each}
 				<button
 					onclick={() => goToPage(data.items.page + 1)}
 					disabled={data.items.page >= data.items.totalPages}
-					class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+					class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 				>
 					<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
 					</svg>
 				</button>
 			</div>
+			<p class="text-xs tabular-nums text-slate-500">
+				<span class="font-medium text-slate-700">{(data.items.page - 1) * data.items.limit + 1}–{Math.min(data.items.page * data.items.limit, data.items.total)}</span>
+				/ {data.items.total}건
+			</p>
 		</div>
 	{/if}
 </div>

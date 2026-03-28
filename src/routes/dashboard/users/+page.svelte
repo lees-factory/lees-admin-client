@@ -34,6 +34,18 @@
 		goto(`/dashboard/users?${params.toString()}`);
 	}
 
+	function getPageNumbers(current: number, total: number): (number | '...')[] {
+		if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+		const pages: (number | '...')[] = [1];
+		if (current > 3) pages.push('...');
+		for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+			pages.push(i);
+		}
+		if (current < total - 2) pages.push('...');
+		pages.push(total);
+		return pages;
+	}
+
 	function formatDate(dateStr: string | null) {
 		if (!dateStr) return '-';
 		return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -219,39 +231,45 @@
 
 		<!-- Pagination -->
 		{#if data.users.totalPages > 1}
-			<div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3">
-				<p class="text-sm text-slate-500">
-					{data.users.total}건 중 {(data.users.page - 1) * data.users.limit + 1}-{Math.min(
-						data.users.page * data.users.limit,
-						data.users.total
-					)}
-				</p>
-				<div class="flex gap-1">
+			<div class="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-3">
+				<div class="flex items-center gap-1">
 					<button
 						onclick={() => goToPage(data.users.page - 1)}
 						disabled={data.users.page <= 1}
-						class="rounded-md px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
+						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
-						이전
+						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+						</svg>
 					</button>
-					{#each Array.from({ length: data.users.totalPages }, (_, i) => i + 1) as p}
-						<button
-							onclick={() => goToPage(p)}
-							class="rounded-md px-3 py-1 text-sm font-medium {p === data.users.page
-								? 'bg-blue-600 text-white'
-								: 'text-slate-600 hover:bg-slate-200'}"
-						>
-							{p}
-						</button>
+					{#each getPageNumbers(data.users.page, data.users.totalPages) as p}
+						{#if p === '...'}
+							<span class="size-10 flex items-center justify-center text-sm text-slate-400">…</span>
+						{:else}
+							<button
+								onclick={() => goToPage(p as number)}
+								class="size-10 rounded-lg text-sm font-semibold transition-colors {p === data.users.page
+									? 'bg-slate-900 text-white shadow-sm'
+									: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
+							>
+								{p}
+							</button>
+						{/if}
 					{/each}
 					<button
 						onclick={() => goToPage(data.users.page + 1)}
 						disabled={data.users.page >= data.users.totalPages}
-						class="rounded-md px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-40 disabled:hover:bg-transparent"
+						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
-						다음
+						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+						</svg>
 					</button>
 				</div>
+				<p class="text-xs tabular-nums text-slate-500">
+					<span class="font-medium text-slate-700">{(data.users.page - 1) * data.users.limit + 1}–{Math.min(data.users.page * data.users.limit, data.users.total)}</span>
+					/ {data.users.total}건
+				</p>
 			</div>
 		{/if}
 	</div>

@@ -1,9 +1,9 @@
 import { error, fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { getHotProducts, crawlHotProducts, toggleHotProductActive } from '$lib/adapters/admin';
+import { getHotProducts, toggleHotProductActive } from '$lib/adapters/admin';
 import type { Market } from '$lib/adapters/admin';
 
-const VALID_MARKETS = ['all', 'coupang', 'aliexpress', 'amazon', 'gmarket'];
+const VALID_MARKETS = ['all', 'coupang', 'aliexpress', 'amazon'];
 
 export const load: PageServerLoad = async ({ url }) => {
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1') || 1);
@@ -20,20 +20,6 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions = {
-	crawl: async ({ request }) => {
-		const formData = await request.formData();
-		const marketRaw = (formData.get('market') as string) ?? 'all';
-		const market = (VALID_MARKETS.includes(marketRaw) ? marketRaw : 'all') as Market | 'all';
-
-		try {
-			const result = await crawlHotProducts(market);
-			if (result.success) return { success: true, action: 'crawl', count: result.count, market };
-			return fail(500, { error: '수집에 실패했습니다.' });
-		} catch (e) {
-			return fail(500, { error: '서버 오류가 발생했습니다.' });
-		}
-	},
-
 	toggleActive: async ({ request }) => {
 		const formData = await request.formData();
 		const id = formData.get('id') as string;
