@@ -6,7 +6,7 @@
 	let { children } = $props();
 </script>
 
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-slate-100">
 	<Sidebar />
 
 	<!-- Main Content Wrapper -->

@@ -3,12 +3,11 @@ import { writable } from 'svelte/store';
 export interface Project {
 	id: string;
 	name: string;
-	type: 'ecommerce' | 'cloud'; // To differentiate UI themes/content
+	type: 'price-tracker';
 }
 
 export const projects: Project[] = [
-	{ id: 'boom', name: 'boom', type: 'ecommerce' },
-	{ id: 'cloud-between-us', name: 'cloud between us', type: 'cloud' }
+	{ id: 'price-eye', name: 'Price Eye', type: 'price-tracker' }
 ];
 
 function createProjectStore() {

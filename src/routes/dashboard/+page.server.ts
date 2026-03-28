@@ -1,20 +1,29 @@
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { getDashboardStats } from '$lib/adapters/admin';
 
 export const load: PageServerLoad = async () => {
-	// Mock Data for Dashboard
-	return {
-		stats: [
-			{ label: 'Total Users', value: '12,345', change: '+12%', trend: 'up' },
-			{ label: 'Active Sessions', value: '423', change: '-5%', trend: 'down' },
-			{ label: 'Revenue (MTD)', value: '$45,231', change: '+8%', trend: 'up' },
-			{ label: 'Audit Logs (Today)', value: '1,204', change: '+23%', trend: 'up' }
-		],
-		recentActivity: [
-			{ id: 1, user: 'admin@example.com', action: 'user.create', target: 'user_8823', time: '2 mins ago', status: 'success' },
-			{ id: 2, user: 'support@example.com', action: 'order.refund', target: 'ord_9921', time: '15 mins ago', status: 'success' },
-			{ id: 3, user: 'system', action: 'backup.daily', target: 'db_main', time: '1 hour ago', status: 'success' },
-			{ id: 4, user: 'unknown', action: 'login.failed', target: 'ip_192.168.1.1', time: '2 hours ago', status: 'warning' },
-			{ id: 5, user: 'admin@example.com', action: 'settings.update', target: 'feature_flags', time: '3 hours ago', status: 'success' }
-		]
-	};
+	try {
+		const rawStats = await getDashboardStats();
+
+		const stats = [
+			{ label: '전체 사용자', value: rawStats.totalUsers.toLocaleString(), change: `+${rawStats.todaySignups}`, trend: 'up' as const, icon: 'Users' },
+			{ label: '추적 상품', value: rawStats.totalTrackedItems.toLocaleString(), change: `${rawStats.activeTrackings.toLocaleString()} 활성`, trend: 'up' as const, icon: 'ShoppingBag' },
+			{ label: 'Free / Pro', value: `${rawStats.freeUsers.toLocaleString()} / ${rawStats.proUsers.toLocaleString()}`, change: `${((rawStats.proUsers / rawStats.totalUsers) * 100).toFixed(1)}%`, trend: 'up' as const, icon: 'CreditCard' },
+			{ label: '수집 성공률 (24h)', value: `${rawStats.crawlSuccessRate}%`, change: `실패 ${rawStats.crawlFailureRate}%`, trend: rawStats.crawlSuccessRate >= 90 ? 'up' as const : 'down' as const, icon: 'ChartBar' }
+		];
+
+		// TODO: 실제 API에서 최근 활동 로그를 가져올 때 교체
+		const recentActivity = [
+			{ user: 'kim@example.com', action: 'plan.upgraded', target: 'Free → Pro', status: 'success', time: '5분 전' },
+			{ user: 'system', action: 'crawl.batch', target: 'Coupang 1,234건', status: 'success', time: '15분 전' },
+			{ user: 'system', action: 'crawl.failed', target: 'Amazon 28건 실패', status: 'failed', time: '30분 전' },
+			{ user: 'lee@example.com', action: 'item.added', target: 'AliExpress 상품 추가', status: 'success', time: '1시간 전' },
+			{ user: 'system', action: 'alert.price_drop', target: 'AirPods Pro -10%', status: 'warning', time: '2시간 전' }
+		];
+
+		return { stats, recentActivity };
+	} catch (e) {
+		throw error(500, '대시보드 데이터를 불러오는데 실패했습니다.');
+	}
 };
