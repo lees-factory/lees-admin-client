@@ -91,6 +91,22 @@ export interface MarketStatus {
 	totalCrawls24h: number;
 }
 
+export interface HotProduct {
+	id: string;
+	trackedItemId: string;
+	productName: string;
+	market: Market;
+	currentPrice: number;
+	currency: string;
+	imageUrl: string;
+	rank: number;
+	active: boolean;
+	lastCrawledAt: string | null;
+	crawlStatus: 'success' | 'failed' | 'pending';
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface SystemSettings {
 	crawlIntervalMinutes: number;
 	freePlanMaxItems: number;
@@ -419,6 +435,84 @@ const MOCK_MARKET_STATUS: MarketStatus[] = [
 	}
 ];
 
+const MOCK_HOT_PRODUCTS: HotProduct[] = [
+	{
+		id: 'hp_001',
+		trackedItemId: 'ti_001',
+		productName: 'Apple AirPods Pro 2nd Gen',
+		market: 'coupang',
+		currentPrice: 289000,
+		currency: 'KRW',
+		imageUrl: '',
+		rank: 1,
+		active: true,
+		lastCrawledAt: '2026-03-28T06:00:00Z',
+		crawlStatus: 'success',
+		createdAt: '2026-03-20T09:00:00Z',
+		updatedAt: '2026-03-28T06:00:00Z'
+	},
+	{
+		id: 'hp_002',
+		trackedItemId: 'ti_003',
+		productName: 'Samsung Galaxy S25 Ultra',
+		market: 'coupang',
+		currentPrice: 1650000,
+		currency: 'KRW',
+		imageUrl: '',
+		rank: 2,
+		active: true,
+		lastCrawledAt: '2026-03-28T06:15:00Z',
+		crawlStatus: 'success',
+		createdAt: '2026-03-22T10:00:00Z',
+		updatedAt: '2026-03-28T06:15:00Z'
+	},
+	{
+		id: 'hp_003',
+		trackedItemId: 'ti_005',
+		productName: 'Nike Air Max 97',
+		market: 'gmarket',
+		currentPrice: 179000,
+		currency: 'KRW',
+		imageUrl: '',
+		rank: 3,
+		active: true,
+		lastCrawledAt: '2026-03-28T04:00:00Z',
+		crawlStatus: 'success',
+		createdAt: '2026-03-23T11:00:00Z',
+		updatedAt: '2026-03-28T04:00:00Z'
+	},
+	{
+		id: 'hp_004',
+		trackedItemId: 'ti_002',
+		productName: 'Xiaomi Robot Vacuum X10+',
+		market: 'aliexpress',
+		currentPrice: 45200,
+		currency: 'KRW',
+		imageUrl: '',
+		rank: 4,
+		active: false,
+		lastCrawledAt: '2026-03-28T05:30:00Z',
+		crawlStatus: 'success',
+		createdAt: '2026-03-24T14:00:00Z',
+		updatedAt: '2026-03-28T05:30:00Z'
+	},
+	{
+		id: 'hp_005',
+		trackedItemId: 'ti_004',
+		productName: 'Logitech MX Master 3S',
+		market: 'amazon',
+		currentPrice: 89000,
+		currency: 'KRW',
+		imageUrl: '',
+		rank: 5,
+		active: false,
+		lastCrawledAt: null,
+		crawlStatus: 'failed',
+		createdAt: '2026-03-25T08:00:00Z',
+		updatedAt: '2026-03-25T08:00:00Z'
+	}
+];
+
 const MOCK_SETTINGS: SystemSettings = {
 	crawlIntervalMinutes: 360,
 	freePlanMaxItems: 5,
@@ -568,4 +662,16 @@ export async function updateSettings(
 ): Promise<{ success: boolean }> {
 	// TODO: PATCH /v1/admin/settings
 	return { success: true };
+}
+
+// ─── Hot Products ───────────────────────────────────────────
+
+export async function getHotProducts(): Promise<HotProduct[]> {
+	// TODO: GET /v1/admin/hot-products
+	return [...MOCK_HOT_PRODUCTS].sort((a, b) => a.rank - b.rank);
+}
+
+export async function crawlAllHotProducts(): Promise<{ success: boolean; count: number }> {
+	// TODO: POST /v1/admin/hot-products/crawl-all
+	return { success: true, count: MOCK_HOT_PRODUCTS.filter((p) => p.active).length };
 }

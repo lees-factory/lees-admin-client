@@ -7,7 +7,8 @@
 		'/dashboard/users': '사용자 관리',
 		'/dashboard/items': '추적 상품 관리',
 		'/dashboard/monitoring': '크롤링 모니터링',
-		'/dashboard/settings': '시스템 설정'
+		'/dashboard/settings': '시스템 설정',
+		'/dashboard/hot-products': '핫 프로덕트 관리'
 	};
 
 	let pageTitle = $derived(pageTitles[$page.url.pathname] ?? '대시보드');
