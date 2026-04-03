@@ -19,6 +19,8 @@
 		statusFilter = statusInit;
 	});
 
+	let totalPages = $derived(Math.ceil(data.users.total_count / data.users.page_size));
+
 	function applyFilters() {
 		const params = new URLSearchParams();
 		if (search) params.set('search', search);
@@ -46,7 +48,7 @@
 		return pages;
 	}
 
-	function formatDate(dateStr: string | null) {
+	function formatDate(dateStr: string | null | undefined) {
 		if (!dateStr) return '-';
 		return new Date(dateStr).toLocaleDateString('ko-KR', {
 			year: 'numeric',
@@ -62,7 +64,7 @@
 		<div>
 			<h2 class="text-2xl font-bold text-slate-900">사용자 관리</h2>
 			<p class="mt-1 text-sm text-slate-500">
-				전체 {data.users.total}명의 사용자
+				전체 {data.users.total_count}명의 사용자
 			</p>
 		</div>
 	</div>
@@ -94,8 +96,7 @@
 					class="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 				>
 					<option value="all">전체</option>
-					<option value="free">Free</option>
-					<option value="pro">Pro</option>
+					<option value="FREE">Free</option>
 				</select>
 			</div>
 			<div>
@@ -106,8 +107,8 @@
 					class="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 				>
 					<option value="all">전체</option>
-					<option value="active">활성</option>
-					<option value="inactive">비활성</option>
+					<option value="ACTIVE">활성</option>
+					<option value="INACTIVE">비활성</option>
 				</select>
 			</div>
 			<button
@@ -149,54 +150,42 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-200 bg-white">
-					{#each data.users.data as user}
+					{#each data.users.items as user}
 						<tr class="transition-colors hover:bg-slate-50/50">
 							<td class="px-6 py-4 whitespace-nowrap">
 								<div class="flex items-center">
 									<div
 										class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600"
 									>
-										{user.name.charAt(0)}
+										{(user.display_name || user.email || '?').charAt(0)}
 									</div>
 									<div class="ml-3">
-										<p class="text-sm font-medium text-slate-900">{user.name}</p>
+										<p class="text-sm font-medium text-slate-900">{user.display_name || '-'}</p>
 										<p class="text-xs text-slate-500">{user.email}</p>
 									</div>
 								</div>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								{#if user.plan === 'pro'}
-									<span
-										class="inline-flex items-center rounded-full bg-violet-50 px-2 py-1 text-xs font-medium text-violet-700 ring-1 ring-violet-600/20 ring-inset"
-										>Pro</span
-									>
-								{:else}
-									<span
-										class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-500/10 ring-inset"
-										>Free</span
-									>
-								{/if}
+								<span
+									class="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-500/10 ring-inset"
+									>Free</span
+								>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								{#if user.status === 'active'}
+								{#if user.status === 'ACTIVE'}
 									<span
 										class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-600/20 ring-inset"
 										>활성</span
 									>
-								{:else if user.status === 'inactive'}
+								{:else}
 									<span
 										class="inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-amber-600/20 ring-inset"
 										>비활성</span
 									>
-								{:else}
-									<span
-										class="inline-flex items-center rounded-full bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 ring-1 ring-rose-600/10 ring-inset"
-										>삭제됨</span
-									>
 								{/if}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								{#if user.emailVerified}
+								{#if user.email_verified}
 									<svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
@@ -207,18 +196,18 @@
 								{/if}
 							</td>
 							<td class="px-6 py-4 text-sm text-slate-900 whitespace-nowrap">
-								{user.trackedItemCount}
+								{user.tracked_item_count}
 							</td>
 							<td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-								{formatDate(user.createdAt)}
+								{formatDate(user.created_at)}
 							</td>
 							<td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
-								{formatDate(user.lastLoginAt)}
+								{formatDate(user.last_login_at)}
 							</td>
 						</tr>
 					{/each}
 
-					{#if data.users.data.length === 0}
+					{#if data.users.items.length === 0}
 						<tr>
 							<td colspan="7" class="px-6 py-12 text-center text-sm text-slate-500">
 								검색 결과가 없습니다.
@@ -230,7 +219,7 @@
 		</div>
 
 		<!-- Pagination -->
-		{#if data.users.totalPages > 1}
+		{#if totalPages > 1}
 			<div class="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-3">
 				<div class="flex items-center gap-1">
 					<button
@@ -242,7 +231,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
 						</svg>
 					</button>
-					{#each getPageNumbers(data.users.page, data.users.totalPages) as p}
+					{#each getPageNumbers(data.users.page, totalPages) as p}
 						{#if p === '...'}
 							<span class="size-10 flex items-center justify-center text-sm text-slate-400">…</span>
 						{:else}
@@ -258,7 +247,7 @@
 					{/each}
 					<button
 						onclick={() => goToPage(data.users.page + 1)}
-						disabled={data.users.page >= data.users.totalPages}
+						disabled={data.users.page >= totalPages}
 						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
 						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -267,8 +256,8 @@
 					</button>
 				</div>
 				<p class="text-xs tabular-nums text-slate-500">
-					<span class="font-medium text-slate-700">{(data.users.page - 1) * data.users.limit + 1}–{Math.min(data.users.page * data.users.limit, data.users.total)}</span>
-					/ {data.users.total}건
+					<span class="font-medium text-slate-700">{(data.users.page - 1) * data.users.page_size + 1}–{Math.min(data.users.page * data.users.page_size, data.users.total_count)}</span>
+					/ {data.users.total_count}건
 				</p>
 			</div>
 		{/if}

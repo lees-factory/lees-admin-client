@@ -4,18 +4,20 @@ import {
 	getDashboardStats,
 	getMarketStatuses,
 	getCrawlLogs,
-	getHotProducts,
-	getCrawlRunnerState
+	getHotProducts
 } from '$lib/adapters/admin';
+import { getBatchStatus } from '$lib/server/api/batch';
+import { getTokenStatus } from '$lib/server/api/token';
 
 export const load: PageServerLoad = async () => {
 	try {
-		const [stats, marketStatuses, recentFailures, hotProducts, crawlRunner] = await Promise.all([
+		const [stats, marketStatuses, recentFailures, hotProducts, batchStatusResult, tokenStatusResult] = await Promise.all([
 			getDashboardStats(),
 			getMarketStatuses(),
 			getCrawlLogs({ page: 1, limit: 5, status: 'failed' }),
 			getHotProducts({ page: 1, limit: 100 }),
-			getCrawlRunnerState()
+			getBatchStatus('PRICE_UPDATE').catch(() => ({ data: null })),
+			getTokenStatus().catch(() => ({ data: { tokens: [] } }))
 		]);
 
 		// 핫프로덕트 마켓별 active 집계
@@ -37,7 +39,8 @@ export const load: PageServerLoad = async () => {
 			marketStatuses,
 			recentFailures: recentFailures.data,
 			hotProductSummary,
-			crawlRunner
+			batchStatus: batchStatusResult.data,
+			tokenStatus: tokenStatusResult.data?.tokens ?? []
 		};
 	} catch (e) {
 		throw error(500, '대시보드 데이터를 불러오는데 실패했습니다.');

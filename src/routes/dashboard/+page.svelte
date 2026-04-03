@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import type { MarketStatus } from '$lib/adapters/admin';
+	import type { TokenStatusEntry } from '$lib/types/api';
 
 	let { data } = $props();
 
@@ -37,8 +38,8 @@
 
 	const quickLinks = [
 		{ href: '/dashboard/items', label: '추적 상품', desc: '전체 상품 조회·관리', icon: 'items' },
-		{ href: '/dashboard/monitoring', label: '크롤 모니터링', desc: '수집 로그·상태 확인', icon: 'monitoring' },
-		{ href: '/dashboard/crawl/user-items', label: '유저 크롤', desc: '크롤 실행·시뮬레이션', icon: 'crawl' },
+		{ href: '/dashboard/batch', label: '배치 관리', desc: '적재·SKU 보강·가격 갱신', icon: 'batch' },
+		{ href: '/dashboard/tokens', label: '토큰 관리', desc: 'AliExpress OAuth 토큰', icon: 'token' },
 		{ href: '/dashboard/settings', label: '시스템 설정', desc: '요금제·수집 주기 설정', icon: 'settings' }
 	];
 
@@ -222,56 +223,46 @@
 
 		<!-- Right: Crawler Status + Hot Products Summary -->
 		<div class="space-y-4">
-			<!-- Crawler Schedule -->
+			<!-- Token Status -->
 			<div class="rounded-xl bg-white shadow-sm ring-1 ring-slate-900/5">
 				<div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-					<h3 class="text-sm font-semibold text-slate-900">크롤러 스케줄</h3>
-					<a href="/dashboard/crawl/user-items" class="text-xs font-semibold text-blue-600 hover:text-blue-500">관리 &rarr;</a>
+					<h3 class="text-sm font-semibold text-slate-900">토큰 상태</h3>
+					<a href="/dashboard/tokens" class="text-xs font-semibold text-blue-600 hover:text-blue-500">관리 &rarr;</a>
 				</div>
 				<div class="divide-y divide-slate-100">
-					<!-- User Items Crawler -->
-					<div class="flex items-center justify-between px-5 py-3">
-						<div class="flex items-center gap-3">
-							<span class="inline-flex size-8 items-center justify-center rounded-lg bg-blue-500/10">
-								<svg class="size-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-							</span>
-							<div>
-								<p class="text-sm font-medium text-slate-700">유저 아이템 크롤</p>
-								<p class="text-xs text-slate-400">
-									{#if data.crawlRunner.userItems.lastJob}
-										마지막: {data.crawlRunner.userItems.lastJob.successCount}/{data.crawlRunner.userItems.lastJob.totalItems} 성공
-									{:else}
-										실행 기록 없음
-									{/if}
-								</p>
+					{#each data.tokenStatus as token}
+						<div class="flex items-center justify-between px-5 py-3">
+							<div class="flex items-center gap-3">
+								<span class="inline-flex size-8 items-center justify-center rounded-lg {token.app_type === 'AFFILIATE' ? 'bg-blue-500/10' : 'bg-violet-500/10'}">
+									<svg class="size-4 {token.app_type === 'AFFILIATE' ? 'text-blue-600' : 'text-violet-600'}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" /></svg>
+								</span>
+								<div>
+									<p class="text-sm font-medium text-slate-700">{token.app_type === 'AFFILIATE' ? 'Affiliate' : 'Dropshipping'}</p>
+									<p class="text-xs text-slate-400">{token.seller_id ?? '미등록'}</p>
+								</div>
 							</div>
-						</div>
-						<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold {data.crawlRunner.userItems.schedule.enabled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 text-slate-500'}">
-							{data.crawlRunner.userItems.schedule.enabled ? '활성' : '수동'}
-						</span>
-					</div>
-
-					<!-- Hot Products SKU Crawler -->
-					<div class="flex items-center justify-between px-5 py-3">
-						<div class="flex items-center gap-3">
-							<span class="inline-flex size-8 items-center justify-center rounded-lg bg-amber-500/10">
-								<svg class="size-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" /></svg>
+							<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold
+								{token.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-600' :
+								 token.status === 'EXPIRING_SOON' ? 'bg-amber-500/10 text-amber-600' :
+								 token.status === 'EXPIRED' ? 'bg-rose-500/10 text-rose-600' :
+								 'bg-slate-100 text-slate-500'}">
+								{#if token.status === 'ACTIVE'}
+									<span class="size-1.5 rounded-full bg-emerald-500"></span>
+									정상
+								{:else if token.status === 'EXPIRING_SOON'}
+									<span class="size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+									곧 만료
+								{:else if token.status === 'EXPIRED'}
+									만료됨
+								{:else}
+									미등록
+								{/if}
 							</span>
-							<div>
-								<p class="text-sm font-medium text-slate-700">핫프로덕트 SKU 크롤</p>
-								<p class="text-xs text-slate-400">
-									{#if data.crawlRunner.hotProductsSku.schedule.nextRunAt}
-										다음 실행: {new Date(data.crawlRunner.hotProductsSku.schedule.nextRunAt).toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-									{:else}
-										스케줄 없음
-									{/if}
-								</p>
-							</div>
 						</div>
-						<span class="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-semibold {data.crawlRunner.hotProductsSku.schedule.enabled ? 'bg-emerald-500/10 text-emerald-600' : 'bg-slate-100 text-slate-500'}">
-							{data.crawlRunner.hotProductsSku.schedule.enabled ? `${data.crawlRunner.hotProductsSku.schedule.intervalMinutes / 60}h 주기` : '수동'}
-						</span>
-					</div>
+					{/each}
+					{#if data.tokenStatus.length === 0}
+						<div class="px-5 py-4 text-center text-xs text-slate-400">토큰 정보를 불러올 수 없습니다.</div>
+					{/if}
 				</div>
 			</div>
 
@@ -321,10 +312,10 @@
 				<div class="mb-2 rounded-lg bg-slate-100 p-2 w-fit transition-colors group-hover:bg-blue-500/10">
 					{#if link.icon === 'items'}
 						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
-					{:else if link.icon === 'monitoring'}
-						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" /></svg>
-					{:else if link.icon === 'crawl'}
-						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
+					{:else if link.icon === 'batch'}
+						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
+					{:else if link.icon === 'token'}
+						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" /></svg>
 					{:else}
 						<svg class="size-4 text-slate-500 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
 					{/if}

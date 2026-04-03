@@ -9,9 +9,8 @@
 		'/dashboard/monitoring': '크롤링 모니터링',
 		'/dashboard/settings': '시스템 설정',
 		'/dashboard/hot-products': '핫 프로덕트 관리',
-		'/dashboard/crawl/hot-products-fetch': '핫프로덕트 수집',
-		'/dashboard/crawl/hot-products-sku': '핫프로덕트 크롤',
-		'/dashboard/crawl/user-items': '유저 아이템 크롤'
+		'/dashboard/batch': '배치 관리',
+		'/dashboard/tokens': '토큰 관리'
 	};
 
 	let pageTitle = $derived(pageTitles[$page.url.pathname] ?? '대시보드');

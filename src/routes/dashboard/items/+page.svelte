@@ -87,6 +87,14 @@
 </script>
 
 <div class="space-y-6" in:fade={{ duration: 200 }}>
+	<!-- DEV Banner -->
+	<div class="rounded-lg border-2 border-dashed border-rose-400 bg-rose-50 px-4 py-3">
+		<div class="flex items-center gap-2">
+			<span class="inline-flex items-center rounded bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">DEV</span>
+			<p class="text-xs font-medium text-rose-700">이 페이지는 Mock 데이터를 사용합니다. 실제 API 연동 전 개발용 화면입니다.</p>
+		</div>
+	</div>
+
 	<!-- Header -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
