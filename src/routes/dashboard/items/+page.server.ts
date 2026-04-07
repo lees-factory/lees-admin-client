@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	try {
 		const items = await getTrackedItems({ page, limit, market });
 		return { items, filters: { market } };
-	} catch (e) {
+	} catch {
 		throw error(500, '추적 상품 데이터를 불러오는데 실패했습니다.');
 	}
 };

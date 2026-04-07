@@ -6,12 +6,10 @@ export interface Project {
 	type: 'price-tracker';
 }
 
-export const projects: Project[] = [
-	{ id: 'price-eye', name: 'Price Eye', type: 'price-tracker' }
-];
+export const projects: Project[] = [{ id: 'price-eye', name: 'Price Eye', type: 'price-tracker' }];
 
 function createProjectStore() {
-	const { subscribe, set, update } = writable<Project>(projects[0]);
+	const { subscribe, set } = writable<Project>(projects[0]);
 
 	return {
 		subscribe,

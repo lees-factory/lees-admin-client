@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 function createSidebarStore() {
-	const { subscribe, set, update } = writable({
+	const { subscribe, update } = writable({
 		isOpen: true, // Desktop default
 		isMobileOpen: false // Mobile default
 	});

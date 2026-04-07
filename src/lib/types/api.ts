@@ -18,7 +18,7 @@ export interface APIResponse<T = unknown> {
 
 export type AppType = 'AFFILIATE' | 'DROPSHIPPING';
 export type MarketType = 'ALIEXPRESS' | 'COUPANG';
-export type BatchJobType = 'PRICE_UPDATE';
+export type BatchJobType = 'PRICE_UPDATE' | 'SKU_SNAPSHOT_UPDATE';
 export type BatchJobStatusEnum = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type TriggerType = 'MANUAL' | 'SCHEDULED';
 export type TokenStatus = 'ACTIVE' | 'EXPIRING_SOON' | 'EXPIRED' | 'NOT_FOUND';
@@ -102,6 +102,23 @@ export interface TokenStatusEntry {
 
 // ─── Users ──────────────────────────────────────────────
 
+export interface AdminUserLoginSession {
+	id: string;
+	user_id: string;
+	refresh_token_hash: string;
+	token_family_id: string;
+	parent_session_id?: string | null;
+	user_agent: string;
+	client_ip: string;
+	device_name: string;
+	expires_at: string;
+	last_seen_at: string;
+	rotated_at?: string | null;
+	revoked_at?: string | null;
+	reuse_detected_at?: string | null;
+	created_at: string;
+}
+
 export interface AdminUser {
 	id: string;
 	email: string;
@@ -112,6 +129,7 @@ export interface AdminUser {
 	tracked_item_count: number;
 	created_at: string;
 	last_login_at?: string | null;
+	sessions: AdminUserLoginSession[];
 }
 
 export interface UserListParams {
@@ -127,6 +145,35 @@ export interface UserListData {
 	page: number;
 	page_size: number;
 	items: AdminUser[];
+}
+
+// ─── Products ───────────────────────────────────────────
+
+export type ProductLanguage = 'KO' | 'EN';
+export type ProductCurrency = 'KRW' | 'USD';
+
+export interface ProductListItem {
+	id: string;
+	market: MarketType;
+	external_product_id: string;
+	original_url: string;
+	title: string;
+	main_image_url: string;
+	current_price: string;
+	currency: ProductCurrency;
+	product_url: string;
+	collection_source: string;
+	language: ProductLanguage;
+}
+
+export interface ProductListData {
+	language: ProductLanguage;
+	items: ProductListItem[];
+}
+
+export interface ProductListParams {
+	language?: ProductLanguage;
+	collection_source?: string;
 }
 
 // ─── Health ─────────────────────────────────────────────

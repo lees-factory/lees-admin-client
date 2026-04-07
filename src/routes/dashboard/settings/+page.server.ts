@@ -6,12 +6,17 @@ export const load: PageServerLoad = async () => {
 	try {
 		const settings = await getSettings();
 		return { settings };
-	} catch (e) {
+	} catch {
 		throw error(500, '설정을 불러오는데 실패했습니다.');
 	}
 };
 
-function safeInt(value: FormDataEntryValue | null, fallback: number, min?: number, max?: number): number {
+function safeInt(
+	value: FormDataEntryValue | null,
+	fallback: number,
+	min?: number,
+	max?: number
+): number {
 	const parsed = parseInt(value as string);
 	if (isNaN(parsed)) return fallback;
 	let result = parsed;
@@ -41,7 +46,7 @@ export const actions = {
 				return { success: true };
 			}
 			return fail(500, { error: '설정 저장에 실패했습니다.' });
-		} catch (e) {
+		} catch {
 			return fail(500, { error: '서버 오류가 발생했습니다.' });
 		}
 	}

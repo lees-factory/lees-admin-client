@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	try {
 		const hotProducts = await getHotProducts({ page, limit, market });
 		return { hotProducts, filters: { market } };
-	} catch (e) {
+	} catch {
 		throw error(500, '핫 프로덕트 데이터를 불러오는데 실패했습니다.');
 	}
 };
@@ -30,7 +30,7 @@ export const actions = {
 			const result = await toggleHotProductActive(id, active);
 			if (result.success) return { success: true, action: 'toggleActive' };
 			return fail(500, { error: '상태 변경에 실패했습니다.' });
-		} catch (e) {
+		} catch {
 			return fail(500, { error: '서버 오류가 발생했습니다.' });
 		}
 	}

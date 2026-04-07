@@ -11,7 +11,14 @@ import { getTokenStatus } from '$lib/server/api/token';
 
 export const load: PageServerLoad = async () => {
 	try {
-		const [stats, marketStatuses, recentFailures, hotProducts, batchStatusResult, tokenStatusResult] = await Promise.all([
+		const [
+			stats,
+			marketStatuses,
+			recentFailures,
+			hotProducts,
+			batchStatusResult,
+			tokenStatusResult
+		] = await Promise.all([
 			getDashboardStats(),
 			getMarketStatuses(),
 			getCrawlLogs({ page: 1, limit: 5, status: 'failed' }),
@@ -42,7 +49,7 @@ export const load: PageServerLoad = async () => {
 			batchStatus: batchStatusResult.data,
 			tokenStatus: tokenStatusResult.data?.tokens ?? []
 		};
-	} catch (e) {
+	} catch {
 		throw error(500, '대시보드 데이터를 불러오는데 실패했습니다.');
 	}
 };

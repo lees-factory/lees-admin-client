@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	let { data, form }: { data: any; form: ActionData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let showSuccess = $state(false);
 
@@ -20,8 +20,13 @@
 	<!-- DEV Banner -->
 	<div class="rounded-lg border-2 border-dashed border-rose-400 bg-rose-50 px-4 py-3">
 		<div class="flex items-center gap-2">
-			<span class="inline-flex items-center rounded bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">DEV</span>
-			<p class="text-xs font-medium text-rose-700">이 페이지는 Mock 데이터를 사용합니다. 실제 API 연동 전 개발용 화면입니다.</p>
+			<span
+				class="inline-flex items-center rounded bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase"
+				>DEV</span
+			>
+			<p class="text-xs font-medium text-rose-700">
+				이 페이지는 Mock 데이터를 사용합니다. 실제 API 연동 전 개발용 화면입니다.
+			</p>
 		</div>
 	</div>
 
@@ -67,7 +72,8 @@
 					class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 				/>
 				<p class="mt-1 text-xs text-slate-400">
-					현재: {Math.floor(data.settings.crawlIntervalMinutes / 60)}시간 {data.settings.crawlIntervalMinutes % 60}분마다 수집
+					현재: {Math.floor(data.settings.crawlIntervalMinutes / 60)}시간 {data.settings
+						.crawlIntervalMinutes % 60}분마다 수집
 				</p>
 			</div>
 		</div>
@@ -177,8 +183,8 @@
 						name="announcement"
 						rows="3"
 						class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-						placeholder="공지사항 내용을 입력하세요..."
-					>{data.settings.announcement}</textarea>
+						placeholder="공지사항 내용을 입력하세요...">{data.settings.announcement}</textarea
+					>
 				</div>
 			</div>
 		</div>

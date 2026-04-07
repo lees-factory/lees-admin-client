@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { fade } from 'svelte/transition';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	let { data } = $props();
 
@@ -22,18 +24,18 @@
 	let totalPages = $derived(Math.ceil(data.users.total_count / data.users.page_size));
 
 	function applyFilters() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (search) params.set('search', search);
 		if (planFilter !== 'all') params.set('plan', planFilter);
 		if (statusFilter !== 'all') params.set('status', statusFilter);
 		params.set('page', '1');
-		goto(`/dashboard/users?${params.toString()}`);
+		goto(resolve(`/dashboard/users?${params.toString()}`));
 	}
 
 	function goToPage(p: number) {
-		const params = new URLSearchParams($page.url.searchParams);
+		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
-		goto(`/dashboard/users?${params.toString()}`);
+		goto(resolve(`/dashboard/users?${params.toString()}`));
 	}
 
 	function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -48,6 +50,12 @@
 		return pages;
 	}
 
+	let expandedUserId = $state<string | null>(null);
+
+	function toggleExpand(userId: string) {
+		expandedUserId = expandedUserId === userId ? null : userId;
+	}
+
 	function formatDate(dateStr: string | null | undefined) {
 		if (!dateStr) return '-';
 		return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -55,6 +63,29 @@
 			month: '2-digit',
 			day: '2-digit'
 		});
+	}
+
+	function formatDateTime(dateStr: string | null | undefined) {
+		if (!dateStr) return '-';
+		return new Date(dateStr).toLocaleString('ko-KR', {
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function sessionStatus(session: {
+		revoked_at?: string | null;
+		reuse_detected_at?: string | null;
+		expires_at: string;
+	}) {
+		if (session.revoked_at) return { label: '폐기됨', color: 'bg-slate-500/10 text-slate-600' };
+		if (session.reuse_detected_at)
+			return { label: '재사용 감지', color: 'bg-rose-500/10 text-rose-600' };
+		if (new Date(session.expires_at) < new Date())
+			return { label: '만료', color: 'bg-amber-500/10 text-amber-600' };
+		return { label: '활성', color: 'bg-emerald-500/10 text-emerald-600' };
 	}
 </script>
 
@@ -126,31 +157,42 @@
 			<table class="min-w-full divide-y divide-slate-200">
 				<thead class="bg-slate-50/50">
 					<tr>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>사용자</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>플랜</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>상태</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>이메일 인증</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>추적 상품</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>가입일</th
 						>
-						<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-500 uppercase"
 							>최근 로그인</th
+						>
+						<th
+							class="px-6 py-3 text-center text-xs font-medium tracking-wider text-slate-500 uppercase"
+							>세션</th
 						>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-200 bg-white">
-					{#each data.users.items as user}
+					{#each data.users.items as user (user.id)}
 						<tr class="transition-colors hover:bg-slate-50/50">
 							<td class="px-6 py-4 whitespace-nowrap">
 								<div class="flex items-center">
@@ -186,30 +228,136 @@
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
 								{#if user.email_verified}
-									<svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									<svg
+										class="h-5 w-5 text-emerald-500"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
 									</svg>
 								{:else}
-									<svg class="h-5 w-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									<svg
+										class="h-5 w-5 text-slate-300"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
 									</svg>
 								{/if}
 							</td>
-							<td class="px-6 py-4 text-sm text-slate-900 whitespace-nowrap">
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
 								{user.tracked_item_count}
 							</td>
-							<td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
 								{formatDate(user.created_at)}
 							</td>
-							<td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
 								{formatDate(user.last_login_at)}
 							</td>
+							<td class="px-6 py-4 text-center whitespace-nowrap">
+								{#if user.sessions && user.sessions.length > 0}
+									<button
+										onclick={() => toggleExpand(user.id)}
+										class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50"
+									>
+										{user.sessions.length}
+										<svg
+											class="size-3 transition-transform {expandedUserId === user.id
+												? 'rotate-180'
+												: ''}"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke-width="2.5"
+											stroke="currentColor"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+											/>
+										</svg>
+									</button>
+								{:else}
+									<span class="text-xs text-slate-400">0</span>
+								{/if}
+							</td>
 						</tr>
+						<!-- Session Detail Row -->
+						{#if expandedUserId === user.id && user.sessions && user.sessions.length > 0}
+							<tr>
+								<td colspan="8" class="bg-slate-50/50 px-6 py-4">
+									<div class="space-y-2">
+										<p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+											로그인 세션
+										</p>
+										<div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+											<table class="min-w-full divide-y divide-slate-200 text-xs">
+												<thead class="bg-slate-50">
+													<tr>
+														<th class="px-3 py-2 text-left font-medium text-slate-500">기기</th>
+														<th class="px-3 py-2 text-left font-medium text-slate-500">IP</th>
+														<th class="px-3 py-2 text-left font-medium text-slate-500">상태</th>
+														<th class="px-3 py-2 text-left font-medium text-slate-500"
+															>마지막 활동</th
+														>
+														<th class="px-3 py-2 text-left font-medium text-slate-500">만료</th>
+														<th class="px-3 py-2 text-left font-medium text-slate-500">생성</th>
+													</tr>
+												</thead>
+												<tbody class="divide-y divide-slate-100">
+													{#each user.sessions as session (session.id)}
+														{@const status = sessionStatus(session)}
+														<tr class="hover:bg-slate-50/50">
+															<td
+																class="max-w-[200px] truncate px-3 py-2 text-slate-700"
+																title={session.user_agent}
+															>
+																{session.device_name || session.user_agent}
+															</td>
+															<td class="px-3 py-2 font-mono text-slate-500">{session.client_ip}</td
+															>
+															<td class="px-3 py-2">
+																<span
+																	class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold {status.color}"
+																>
+																	{status.label}
+																</span>
+															</td>
+															<td class="px-3 py-2 text-slate-500"
+																>{formatDateTime(session.last_seen_at)}</td
+															>
+															<td class="px-3 py-2 text-slate-500"
+																>{formatDateTime(session.expires_at)}</td
+															>
+															<td class="px-3 py-2 text-slate-500"
+																>{formatDateTime(session.created_at)}</td
+															>
+														</tr>
+													{/each}
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</td>
+							</tr>
+						{/if}
 					{/each}
 
 					{#if data.users.items.length === 0}
 						<tr>
-							<td colspan="7" class="px-6 py-12 text-center text-sm text-slate-500">
+							<td colspan="8" class="px-6 py-12 text-center text-sm text-slate-500">
 								검색 결과가 없습니다.
 							</td>
 						</tr>
@@ -223,21 +371,33 @@
 			<div class="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-3">
 				<div class="flex items-center gap-1">
 					<button
+						aria-label="이전 페이지"
 						onclick={() => goToPage(data.users.page - 1)}
 						disabled={data.users.page <= 1}
-						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+						class="flex size-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
-						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+						<svg
+							class="size-4"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="2.5"
+							stroke="currentColor"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M15.75 19.5L8.25 12l7.5-7.5"
+							/>
 						</svg>
 					</button>
-					{#each getPageNumbers(data.users.page, totalPages) as p}
+					{#each getPageNumbers(data.users.page, totalPages) as p, i (i)}
 						{#if p === '...'}
-							<span class="size-10 flex items-center justify-center text-sm text-slate-400">…</span>
+							<span class="flex size-10 items-center justify-center text-sm text-slate-400">…</span>
 						{:else}
 							<button
 								onclick={() => goToPage(p as number)}
-								class="size-10 rounded-lg text-sm font-semibold transition-colors {p === data.users.page
+								class="size-10 rounded-lg text-sm font-semibold transition-colors {p ===
+								data.users.page
 									? 'bg-slate-900 text-white shadow-sm'
 									: 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'}"
 							>
@@ -246,17 +406,29 @@
 						{/if}
 					{/each}
 					<button
+						aria-label="다음 페이지"
 						onclick={() => goToPage(data.users.page + 1)}
 						disabled={data.users.page >= totalPages}
-						class="size-10 rounded-lg flex items-center justify-center text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
+						class="flex size-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:pointer-events-none disabled:opacity-30"
 					>
-						<svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+						<svg
+							class="size-4"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="2.5"
+							stroke="currentColor"
+						>
 							<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
 						</svg>
 					</button>
 				</div>
-				<p class="text-xs tabular-nums text-slate-500">
-					<span class="font-medium text-slate-700">{(data.users.page - 1) * data.users.page_size + 1}–{Math.min(data.users.page * data.users.page_size, data.users.total_count)}</span>
+				<p class="text-xs text-slate-500 tabular-nums">
+					<span class="font-medium text-slate-700"
+						>{(data.users.page - 1) * data.users.page_size + 1}–{Math.min(
+							data.users.page * data.users.page_size,
+							data.users.total_count
+						)}</span
+					>
 					/ {data.users.total_count}건
 				</p>
 			</div>

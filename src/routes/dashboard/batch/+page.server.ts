@@ -1,16 +1,26 @@
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { getBatchStatus, loadHotProducts, enrichHotProductSkus, enrichAllSkus, updatePrices } from '$lib/server/api/batch';
+import {
+	getBatchStatus,
+	loadHotProducts,
+	enrichHotProductSkus,
+	enrichAllSkus,
+	updateProductPrices,
+	updateSkuSnapshots
+} from '$lib/server/api/batch';
 import { ApiError } from '$lib/server/api/client';
 import type { HotProductLoadRequest, PriceUpdateRequest, MarketType } from '$lib/types/api';
 
 export const load: PageServerLoad = async () => {
-	try {
-		const statusResult = await getBatchStatus('PRICE_UPDATE');
-		return { batchStatus: statusResult.data ?? null };
-	} catch {
-		return { batchStatus: null };
-	}
+	const [priceResult, skuResult] = await Promise.allSettled([
+		getBatchStatus('PRICE_UPDATE'),
+		getBatchStatus('SKU_SNAPSHOT_UPDATE')
+	]);
+
+	return {
+		batchStatus: priceResult.status === 'fulfilled' ? (priceResult.value.data ?? null) : null,
+		skuBatchStatus: skuResult.status === 'fulfilled' ? (skuResult.value.data ?? null) : null
+	};
 };
 
 export const actions = {
@@ -25,7 +35,11 @@ export const actions = {
 		const maxPrice = formData.get('max_sale_price') as string;
 
 		if (keywords) req.keywords = keywords;
-		if (categoryIds) req.category_ids = categoryIds.split(',').map((s) => s.trim()).filter(Boolean);
+		if (categoryIds)
+			req.category_ids = categoryIds
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean);
 		if (sort) req.sort = sort;
 		if (minPrice) req.min_sale_price = minPrice;
 		if (maxPrice) req.max_sale_price = maxPrice;
@@ -59,7 +73,7 @@ export const actions = {
 		}
 	},
 
-	updatePrices: async ({ request }) => {
+	updateProductPrices: async ({ request }) => {
 		const formData = await request.formData();
 		const req: PriceUpdateRequest = {};
 
@@ -72,16 +86,59 @@ export const actions = {
 
 		if (collectionSource) req.collection_source = collectionSource;
 		if (market) req.market = market as MarketType;
-		if (productIds) req.product_ids = productIds.split(',').map((s) => s.trim()).filter(Boolean);
+		if (productIds)
+			req.product_ids = productIds
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean);
 		if (collectedBefore) req.collected_before = collectedBefore;
 		if (force === 'on') req.force = true;
 		if (requestedBy) req.requested_by = requestedBy;
 
 		try {
-			const result = await updatePrices(req);
-			return { success: true, action: 'updatePrices', message: result.data?.message, job: result.data?.job };
+			const result = await updateProductPrices(req);
+			return {
+				success: true,
+				action: 'updateProductPrices',
+				message: result.data?.message,
+				job: result.data?.job
+			};
 		} catch (e) {
 			const msg = e instanceof ApiError ? e.message : '가격 갱신에 실패했습니다.';
+			return fail(500, { error: msg });
+		}
+	},
+
+	updateSkuSnapshots: async ({ request }) => {
+		const formData = await request.formData();
+		const req: PriceUpdateRequest = {};
+
+		const collectionSource = formData.get('collection_source') as string;
+		const market = formData.get('market') as string;
+		const productIds = formData.get('product_ids') as string;
+		const force = formData.get('force');
+		const requestedBy = formData.get('requested_by') as string;
+
+		if (collectionSource) req.collection_source = collectionSource;
+		if (market) req.market = market as MarketType;
+		if (productIds)
+			req.product_ids = productIds
+				.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean);
+		if (force === 'on') req.force = true;
+		if (requestedBy) req.requested_by = requestedBy;
+
+		try {
+			const result = await updateSkuSnapshots(req);
+			return {
+				success: true,
+				action: 'updateSkuSnapshots',
+				message: result.data?.message,
+				job: result.data?.job
+			};
+		} catch (e) {
+			const msg = e instanceof ApiError ? e.message : 'SKU snapshot 갱신에 실패했습니다.';
 			return fail(500, { error: msg });
 		}
 	}

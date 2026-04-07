@@ -470,44 +470,194 @@ const MOCK_MARKET_STATUS: MarketStatus[] = [
 		avgDuration: 8500,
 		lastCheckedAt: '2026-03-28T05:00:00Z',
 		totalCrawls24h: 982
-	},
+	}
 ];
 
 // 핫프로덕트: 수집(fetch) 결과로 쌓인 목록 — 마켓별 10개씩 총 30개
-const HOT_PRODUCT_SEED: { name: string; market: Market; price: number; active: boolean; status: 'success' | 'failed' | 'pending' }[] = [
+const HOT_PRODUCT_SEED: {
+	name: string;
+	market: Market;
+	price: number;
+	active: boolean;
+	status: 'success' | 'failed' | 'pending';
+}[] = [
 	// Coupang 10개
-	{ name: 'Apple AirPods Pro 2nd Gen', market: 'coupang', price: 289000, active: true, status: 'success' },
-	{ name: 'Samsung Galaxy S25 Ultra', market: 'coupang', price: 1650000, active: true, status: 'success' },
-	{ name: '다이슨 에어랩 컴플리트', market: 'coupang', price: 598000, active: true, status: 'success' },
+	{
+		name: 'Apple AirPods Pro 2nd Gen',
+		market: 'coupang',
+		price: 289000,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: 'Samsung Galaxy S25 Ultra',
+		market: 'coupang',
+		price: 1650000,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: '다이슨 에어랩 컴플리트',
+		market: 'coupang',
+		price: 598000,
+		active: true,
+		status: 'success'
+	},
 	{ name: 'LG 그램 17 2026', market: 'coupang', price: 1890000, active: true, status: 'success' },
 	{ name: '쿠쿠 IH 전기밥솥', market: 'coupang', price: 289000, active: false, status: 'success' },
-	{ name: '삼성 비스포크 제트 AI', market: 'coupang', price: 1190000, active: false, status: 'success' },
-	{ name: '오설록 프리미엄 세트', market: 'coupang', price: 42000, active: false, status: 'pending' },
+	{
+		name: '삼성 비스포크 제트 AI',
+		market: 'coupang',
+		price: 1190000,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: '오설록 프리미엄 세트',
+		market: 'coupang',
+		price: 42000,
+		active: false,
+		status: 'pending'
+	},
 	{ name: '닌텐도 스위치 2', market: 'coupang', price: 449000, active: true, status: 'success' },
-	{ name: '코웨이 아이콘 정수기', market: 'coupang', price: 38900, active: false, status: 'failed' },
-	{ name: '필립스 소닉케어 다이아몬드', market: 'coupang', price: 189000, active: false, status: 'success' },
+	{
+		name: '코웨이 아이콘 정수기',
+		market: 'coupang',
+		price: 38900,
+		active: false,
+		status: 'failed'
+	},
+	{
+		name: '필립스 소닉케어 다이아몬드',
+		market: 'coupang',
+		price: 189000,
+		active: false,
+		status: 'success'
+	},
 	// AliExpress 10개
-	{ name: 'Xiaomi Robot Vacuum X10+', market: 'aliexpress', price: 45200, active: true, status: 'success' },
-	{ name: 'Baseus 65W GaN Charger', market: 'aliexpress', price: 18500, active: true, status: 'success' },
+	{
+		name: 'Xiaomi Robot Vacuum X10+',
+		market: 'aliexpress',
+		price: 45200,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: 'Baseus 65W GaN Charger',
+		market: 'aliexpress',
+		price: 18500,
+		active: true,
+		status: 'success'
+	},
 	{ name: 'Dreame L20 Ultra', market: 'aliexpress', price: 82000, active: true, status: 'success' },
-	{ name: 'QCY HT07 ANC Earbuds', market: 'aliexpress', price: 23400, active: false, status: 'success' },
-	{ name: 'Ugreen Nexode 100W', market: 'aliexpress', price: 32000, active: false, status: 'success' },
-	{ name: 'POCO F6 Pro 512GB', market: 'aliexpress', price: 389000, active: true, status: 'success' },
-	{ name: 'Anker Soundcore Space Q45', market: 'aliexpress', price: 67000, active: false, status: 'failed' },
-	{ name: 'Roborock S8 MaxV Ultra', market: 'aliexpress', price: 125000, active: true, status: 'success' },
-	{ name: 'Xiaomi Smart Band 9 Pro', market: 'aliexpress', price: 42000, active: false, status: 'pending' },
-	{ name: 'Redmi Buds 5 Pro', market: 'aliexpress', price: 28000, active: false, status: 'success' },
+	{
+		name: 'QCY HT07 ANC Earbuds',
+		market: 'aliexpress',
+		price: 23400,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: 'Ugreen Nexode 100W',
+		market: 'aliexpress',
+		price: 32000,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: 'POCO F6 Pro 512GB',
+		market: 'aliexpress',
+		price: 389000,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: 'Anker Soundcore Space Q45',
+		market: 'aliexpress',
+		price: 67000,
+		active: false,
+		status: 'failed'
+	},
+	{
+		name: 'Roborock S8 MaxV Ultra',
+		market: 'aliexpress',
+		price: 125000,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: 'Xiaomi Smart Band 9 Pro',
+		market: 'aliexpress',
+		price: 42000,
+		active: false,
+		status: 'pending'
+	},
+	{
+		name: 'Redmi Buds 5 Pro',
+		market: 'aliexpress',
+		price: 28000,
+		active: false,
+		status: 'success'
+	},
 	// Amazon 10개
-	{ name: 'Logitech MX Master 3S', market: 'amazon', price: 89000, active: true, status: 'success' },
+	{
+		name: 'Logitech MX Master 3S',
+		market: 'amazon',
+		price: 89000,
+		active: true,
+		status: 'success'
+	},
 	{ name: 'Sony WH-1000XM5', market: 'amazon', price: 328000, active: true, status: 'success' },
-	{ name: 'Kindle Paperwhite 2025', market: 'amazon', price: 159000, active: true, status: 'success' },
-	{ name: 'Apple Magic Keyboard', market: 'amazon', price: 135000, active: false, status: 'success' },
-	{ name: 'Anker 737 Power Bank', market: 'amazon', price: 78000, active: false, status: 'success' },
-	{ name: 'Bose QC Ultra Headphones', market: 'amazon', price: 389000, active: true, status: 'failed' },
+	{
+		name: 'Kindle Paperwhite 2025',
+		market: 'amazon',
+		price: 159000,
+		active: true,
+		status: 'success'
+	},
+	{
+		name: 'Apple Magic Keyboard',
+		market: 'amazon',
+		price: 135000,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: 'Anker 737 Power Bank',
+		market: 'amazon',
+		price: 78000,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: 'Bose QC Ultra Headphones',
+		market: 'amazon',
+		price: 389000,
+		active: true,
+		status: 'failed'
+	},
 	{ name: 'Razer Viper V3 Pro', market: 'amazon', price: 189000, active: false, status: 'success' },
-	{ name: 'SteelSeries Arctis Nova 7', market: 'amazon', price: 156000, active: false, status: 'success' },
-	{ name: 'Corsair K70 RGB TKL', market: 'amazon', price: 145000, active: false, status: 'pending' },
-	{ name: 'Samsung T7 Shield SSD 2TB', market: 'amazon', price: 178000, active: true, status: 'success' },
+	{
+		name: 'SteelSeries Arctis Nova 7',
+		market: 'amazon',
+		price: 156000,
+		active: false,
+		status: 'success'
+	},
+	{
+		name: 'Corsair K70 RGB TKL',
+		market: 'amazon',
+		price: 145000,
+		active: false,
+		status: 'pending'
+	},
+	{
+		name: 'Samsung T7 Shield SSD 2TB',
+		market: 'amazon',
+		price: 178000,
+		active: true,
+		status: 'success'
+	}
 ];
 
 const MOCK_HOT_PRODUCTS: HotProduct[] = HOT_PRODUCT_SEED.map((s, i) => ({
@@ -652,9 +802,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 	return MOCK_DASHBOARD;
 }
 
-export async function getUsers(
-	params: AdminUserListParams
-): Promise<PaginatedResponse<AdminUser>> {
+export async function getUsers(params: AdminUserListParams): Promise<PaginatedResponse<AdminUser>> {
 	let filtered = [...MOCK_USERS];
 
 	if (params.search) {
@@ -687,10 +835,7 @@ export async function getUser(id: string): Promise<AdminUser | null> {
 	return MOCK_USERS.find((u) => u.id === id) ?? null;
 }
 
-export async function updateUserPlan(
-	_id: string,
-	_plan: UserPlan
-): Promise<{ success: boolean }> {
+export async function updateUserPlan(_id: string, _plan: UserPlan): Promise<{ success: boolean }> {
 	// TODO: PATCH /v1/admin/users/:id
 	return { success: true };
 }
@@ -736,9 +881,7 @@ export async function getTrackedItems(params: {
 	};
 }
 
-export async function triggerCrawl(
-	_itemId: string
-): Promise<{ success: boolean }> {
+export async function triggerCrawl(_itemId: string): Promise<{ success: boolean }> {
 	// TODO: POST /v1/admin/crawl/trigger
 	return { success: true };
 }
@@ -825,9 +968,10 @@ export async function crawlHotProducts(
 	market?: Market | 'all'
 ): Promise<{ success: boolean; count: number }> {
 	// TODO: POST /v1/admin/hot-products/crawl  body: { market }
-	const targets = market && market !== 'all'
-		? MOCK_HOT_PRODUCTS.filter((p) => p.market === market)
-		: MOCK_HOT_PRODUCTS;
+	const targets =
+		market && market !== 'all'
+			? MOCK_HOT_PRODUCTS.filter((p) => p.market === market)
+			: MOCK_HOT_PRODUCTS;
 	return { success: true, count: targets.length };
 }
 
@@ -842,24 +986,81 @@ export interface CrawlTargetItem {
 }
 
 const PRODUCT_NAMES_KR = [
-	'삼성 갤럭시 S25 울트라', '애플 아이폰 16 프로맥스', 'LG 그램 17인치', '소니 WH-1000XM5',
-	'다이슨 V15 디텍트', '샤오미 로봇청소기 X10+', '닌텐도 스위치 2', '로지텍 MX Master 3S',
-	'에어팟 프로 2세대', '갤럭시 버즈3 프로', '애플워치 울트라2', '갤럭시워치 울트라',
-	'아이패드 프로 M4', '갤럭시탭 S10 울트라', '맥북 프로 16인치', '레노버 씽크패드 X1',
-	'커세어 K70 RGB', '레이저 바이퍼 V3', '스틸시리즈 아크티스 노바7', 'JBL 플립6',
-	'보스 QC 울트라', '필립스 에어프라이어 XXL', '드롱기 커피머신', '브레빌 에스프레소',
-	'나이키 에어맥스 97', '아디다스 울트라부스트', '뉴발란스 993', '아식스 젤 카야노 31',
-	'삼성 비스포크 냉장고', 'LG 디오스 식기세척기', '쿠쿠 전기밥솥', '위닉스 공기청정기',
-	'발뮤다 토스터', '일렉트로룩스 세탁기', '삼성 BESPOKE AI 세탁기', 'LG 스타일러',
-	'오큘러스 퀘스트3', 'PS5 프로', 'Xbox 시리즈X', '스팀덱 OLED',
-	'캐논 EOS R5', '소니 A7R V', '후지필름 X-T5', 'DJI 미니4 프로',
-	'고프로 히어로13', 'Anker 보조배터리 26800', '삼성 T7 SSD 2TB', 'WD 외장하드 5TB',
-	'벤큐 모니터 32인치', 'LG 울트라기어 27GP850', '삼성 오디세이 G9', '델 U3423WE',
+	'삼성 갤럭시 S25 울트라',
+	'애플 아이폰 16 프로맥스',
+	'LG 그램 17인치',
+	'소니 WH-1000XM5',
+	'다이슨 V15 디텍트',
+	'샤오미 로봇청소기 X10+',
+	'닌텐도 스위치 2',
+	'로지텍 MX Master 3S',
+	'에어팟 프로 2세대',
+	'갤럭시 버즈3 프로',
+	'애플워치 울트라2',
+	'갤럭시워치 울트라',
+	'아이패드 프로 M4',
+	'갤럭시탭 S10 울트라',
+	'맥북 프로 16인치',
+	'레노버 씽크패드 X1',
+	'커세어 K70 RGB',
+	'레이저 바이퍼 V3',
+	'스틸시리즈 아크티스 노바7',
+	'JBL 플립6',
+	'보스 QC 울트라',
+	'필립스 에어프라이어 XXL',
+	'드롱기 커피머신',
+	'브레빌 에스프레소',
+	'나이키 에어맥스 97',
+	'아디다스 울트라부스트',
+	'뉴발란스 993',
+	'아식스 젤 카야노 31',
+	'삼성 비스포크 냉장고',
+	'LG 디오스 식기세척기',
+	'쿠쿠 전기밥솥',
+	'위닉스 공기청정기',
+	'발뮤다 토스터',
+	'일렉트로룩스 세탁기',
+	'삼성 BESPOKE AI 세탁기',
+	'LG 스타일러',
+	'오큘러스 퀘스트3',
+	'PS5 프로',
+	'Xbox 시리즈X',
+	'스팀덱 OLED',
+	'캐논 EOS R5',
+	'소니 A7R V',
+	'후지필름 X-T5',
+	'DJI 미니4 프로',
+	'고프로 히어로13',
+	'Anker 보조배터리 26800',
+	'삼성 T7 SSD 2TB',
+	'WD 외장하드 5TB',
+	'벤큐 모니터 32인치',
+	'LG 울트라기어 27GP850',
+	'삼성 오디세이 G9',
+	'델 U3423WE'
 ];
 
 const USER_NAMES = [
-	'kim', 'lee', 'park', 'choi', 'jung', 'han', 'yoon', 'kang', 'cho', 'shin',
-	'oh', 'seo', 'kwon', 'hwang', 'ahn', 'song', 'jeon', 'lim', 'bae', 'ryu'
+	'kim',
+	'lee',
+	'park',
+	'choi',
+	'jung',
+	'han',
+	'yoon',
+	'kang',
+	'cho',
+	'shin',
+	'oh',
+	'seo',
+	'kwon',
+	'hwang',
+	'ahn',
+	'song',
+	'jeon',
+	'lim',
+	'bae',
+	'ryu'
 ];
 
 const MARKETS: Market[] = ['coupang', 'aliexpress', 'amazon'];
@@ -868,7 +1069,9 @@ function generateCrawlTargetItems(count: number): CrawlTargetItem[] {
 	const items: CrawlTargetItem[] = [];
 	for (let i = 0; i < count; i++) {
 		const market = MARKETS[i % MARKETS.length];
-		const productName = PRODUCT_NAMES_KR[i % PRODUCT_NAMES_KR.length] + (i >= PRODUCT_NAMES_KR.length ? ` (${Math.floor(i / PRODUCT_NAMES_KR.length) + 1})` : '');
+		const productName =
+			PRODUCT_NAMES_KR[i % PRODUCT_NAMES_KR.length] +
+			(i >= PRODUCT_NAMES_KR.length ? ` (${Math.floor(i / PRODUCT_NAMES_KR.length) + 1})` : '');
 		const user = USER_NAMES[i % USER_NAMES.length];
 		const domains: Record<Market, string> = {
 			coupang: 'coupang.com/vp/products/',
@@ -893,7 +1096,8 @@ const MOCK_HOT_PRODUCTS_API_SOURCES: HotProductsApiSource[] = [
 		id: 'hpas_001',
 		market: 'coupang',
 		apiName: 'Coupang Partners API',
-		endpoint: 'https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/products/bestcategories',
+		endpoint:
+			'https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/products/bestcategories',
 		description: '쿠팡 베스트 카테고리 상품 목록',
 		lastFetchedAt: '2026-03-28T06:00:00Z',
 		lastFetchedCount: 6
@@ -902,7 +1106,8 @@ const MOCK_HOT_PRODUCTS_API_SOURCES: HotProductsApiSource[] = [
 		id: 'hpas_002',
 		market: 'coupang',
 		apiName: 'Coupang Goldbox API',
-		endpoint: 'https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/products/goldbox',
+		endpoint:
+			'https://api-gateway.coupang.com/v2/providers/affiliate_open_api/apis/openapi/products/goldbox',
 		description: '쿠팡 골드박스(타임딜) 상품 목록',
 		lastFetchedAt: '2026-03-28T06:00:00Z',
 		lastFetchedCount: 4
@@ -960,7 +1165,9 @@ export async function getCrawlTargetItems(market?: Market | 'all'): Promise<Craw
 	return MOCK_CRAWL_TARGET_ITEMS;
 }
 
-export async function getHotProductsApiSources(market?: Market | 'all'): Promise<HotProductsApiSource[]> {
+export async function getHotProductsApiSources(
+	market?: Market | 'all'
+): Promise<HotProductsApiSource[]> {
 	// TODO: GET /v1/admin/crawl/hot-products-fetch/sources?market=
 	if (market && market !== 'all') {
 		return MOCK_HOT_PRODUCTS_API_SOURCES.filter((s) => s.market === market);
@@ -969,8 +1176,8 @@ export async function getHotProductsApiSources(market?: Market | 'all'): Promise
 }
 
 export async function updateCrawlSchedule(
-	type: CrawlJobType,
-	schedule: Partial<CrawlSchedule>
+	_type: CrawlJobType,
+	_schedule: Partial<CrawlSchedule>
 ): Promise<{ success: boolean }> {
 	// TODO: PATCH /v1/admin/crawl-runner/schedule  body: { type, ...schedule }
 	return { success: true };
