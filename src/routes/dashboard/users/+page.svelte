@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { fade } from 'svelte/transition';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -29,13 +28,13 @@
 		if (planFilter !== 'all') params.set('plan', planFilter);
 		if (statusFilter !== 'all') params.set('status', statusFilter);
 		params.set('page', '1');
-		goto(resolve(`/dashboard/users?${params.toString()}`));
+		goto(`/dashboard/users?${params.toString()}`);
 	}
 
 	function goToPage(p: number) {
 		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
-		goto(resolve(`/dashboard/users?${params.toString()}`));
+		goto(`/dashboard/users?${params.toString()}`);
 	}
 
 	function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -50,12 +49,6 @@
 		return pages;
 	}
 
-	let expandedUserId = $state<string | null>(null);
-
-	function toggleExpand(userId: string) {
-		expandedUserId = expandedUserId === userId ? null : userId;
-	}
-
 	function formatDate(dateStr: string | null | undefined) {
 		if (!dateStr) return '-';
 		return new Date(dateStr).toLocaleDateString('ko-KR', {
@@ -63,29 +56,6 @@
 			month: '2-digit',
 			day: '2-digit'
 		});
-	}
-
-	function formatDateTime(dateStr: string | null | undefined) {
-		if (!dateStr) return '-';
-		return new Date(dateStr).toLocaleString('ko-KR', {
-			month: '2-digit',
-			day: '2-digit',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	function sessionStatus(session: {
-		revoked_at?: string | null;
-		reuse_detected_at?: string | null;
-		expires_at: string;
-	}) {
-		if (session.revoked_at) return { label: '폐기됨', color: 'bg-slate-500/10 text-slate-600' };
-		if (session.reuse_detected_at)
-			return { label: '재사용 감지', color: 'bg-rose-500/10 text-rose-600' };
-		if (new Date(session.expires_at) < new Date())
-			return { label: '만료', color: 'bg-amber-500/10 text-amber-600' };
-		return { label: '활성', color: 'bg-emerald-500/10 text-emerald-600' };
 	}
 </script>
 
@@ -267,92 +237,28 @@
 								{formatDate(user.last_login_at)}
 							</td>
 							<td class="px-6 py-4 text-center whitespace-nowrap">
-								{#if user.sessions && user.sessions.length > 0}
-									<button
-										onclick={() => toggleExpand(user.id)}
-										class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50"
+								<a
+									href="/dashboard/users/{encodeURIComponent(user.id)}"
+									class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-50"
+									title="세션 상세 및 관리"
+								>
+									세션 {user.sessions?.length ?? 0}
+									<svg
+										class="size-3"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke-width="2.5"
+										stroke="currentColor"
 									>
-										{user.sessions.length}
-										<svg
-											class="size-3 transition-transform {expandedUserId === user.id
-												? 'rotate-180'
-												: ''}"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke-width="2.5"
-											stroke="currentColor"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-											/>
-										</svg>
-									</button>
-								{:else}
-									<span class="text-xs text-slate-400">0</span>
-								{/if}
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M8.25 4.5l7.5 7.5-7.5 7.5"
+										/>
+									</svg>
+								</a>
 							</td>
 						</tr>
-						<!-- Session Detail Row -->
-						{#if expandedUserId === user.id && user.sessions && user.sessions.length > 0}
-							<tr>
-								<td colspan="8" class="bg-slate-50/50 px-6 py-4">
-									<div class="space-y-2">
-										<p class="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-											로그인 세션
-										</p>
-										<div class="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-											<table class="min-w-full divide-y divide-slate-200 text-xs">
-												<thead class="bg-slate-50">
-													<tr>
-														<th class="px-3 py-2 text-left font-medium text-slate-500">기기</th>
-														<th class="px-3 py-2 text-left font-medium text-slate-500">IP</th>
-														<th class="px-3 py-2 text-left font-medium text-slate-500">상태</th>
-														<th class="px-3 py-2 text-left font-medium text-slate-500"
-															>마지막 활동</th
-														>
-														<th class="px-3 py-2 text-left font-medium text-slate-500">만료</th>
-														<th class="px-3 py-2 text-left font-medium text-slate-500">생성</th>
-													</tr>
-												</thead>
-												<tbody class="divide-y divide-slate-100">
-													{#each user.sessions as session (session.id)}
-														{@const status = sessionStatus(session)}
-														<tr class="hover:bg-slate-50/50">
-															<td
-																class="max-w-[200px] truncate px-3 py-2 text-slate-700"
-																title={session.user_agent}
-															>
-																{session.device_name || session.user_agent}
-															</td>
-															<td class="px-3 py-2 font-mono text-slate-500">{session.client_ip}</td
-															>
-															<td class="px-3 py-2">
-																<span
-																	class="inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-semibold {status.color}"
-																>
-																	{status.label}
-																</span>
-															</td>
-															<td class="px-3 py-2 text-slate-500"
-																>{formatDateTime(session.last_seen_at)}</td
-															>
-															<td class="px-3 py-2 text-slate-500"
-																>{formatDateTime(session.expires_at)}</td
-															>
-															<td class="px-3 py-2 text-slate-500"
-																>{formatDateTime(session.created_at)}</td
-															>
-														</tr>
-													{/each}
-												</tbody>
-											</table>
-										</div>
-									</div>
-								</td>
-							</tr>
-						{/if}
 					{/each}
 
 					{#if data.users.items.length === 0}

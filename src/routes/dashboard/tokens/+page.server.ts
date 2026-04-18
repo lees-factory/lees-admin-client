@@ -1,21 +1,22 @@
-import { fail } from '@sveltejs/kit';
+import { fail, isRedirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { getTokenStatus, refreshToken, getAuthorizeUrl } from '$lib/server/api/token';
 import { ApiError } from '$lib/server/api/client';
 import type { AppType } from '$lib/types/api';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async (event) => {
 	try {
-		const result = await getTokenStatus();
+		const result = await getTokenStatus(undefined, event);
 		return { tokens: result.data?.tokens ?? [] };
-	} catch {
+	} catch (e) {
+		if (isRedirect(e)) throw e;
 		return { tokens: [] };
 	}
 };
 
 export const actions = {
-	refresh: async ({ request }) => {
-		const formData = await request.formData();
+	refresh: async (event) => {
+		const formData = await event.request.formData();
 		const appType = formData.get('app_type') as AppType;
 
 		if (!appType || !['AFFILIATE', 'DROPSHIPPING'].includes(appType)) {
@@ -23,7 +24,7 @@ export const actions = {
 		}
 
 		try {
-			const result = await refreshToken({ app_type: appType });
+			const result = await refreshToken({ app_type: appType }, event);
 			return {
 				success: true,
 				action: 'refresh',
@@ -31,13 +32,14 @@ export const actions = {
 				data: result.data
 			};
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : '토큰 갱신에 실패했습니다.';
 			return fail(500, { error: msg });
 		}
 	},
 
-	authorize: async ({ request }) => {
-		const formData = await request.formData();
+	authorize: async (event) => {
+		const formData = await event.request.formData();
 		const appType = formData.get('app_type') as AppType;
 
 		if (!appType || !['AFFILIATE', 'DROPSHIPPING'].includes(appType)) {
@@ -45,9 +47,10 @@ export const actions = {
 		}
 
 		try {
-			const result = await getAuthorizeUrl(appType);
+			const result = await getAuthorizeUrl(appType, event);
 			return { success: true, action: 'authorize', data: result.data };
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : '인가 URL 생성에 실패했습니다.';
 			return fail(500, { error: msg });
 		}

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import type { ProductLanguage } from '$lib/types/api';
@@ -22,15 +21,7 @@
 		const params = new SvelteURLSearchParams();
 		if (language) params.set('language', language);
 		if (collectionSource) params.set('collection_source', collectionSource);
-		goto(resolve(`/dashboard/products?${params.toString()}`));
-	}
-
-	function formatPrice(price: string, currency: string) {
-		if (!price) return '-';
-		const num = parseFloat(price);
-		if (isNaN(num)) return price;
-		if (currency === 'KRW') return `₩${num.toLocaleString('ko-KR')}`;
-		return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+		goto(`/dashboard/products?${params.toString()}`);
 	}
 
 	function marketBadgeClass(market: string) {
@@ -62,9 +53,7 @@
 		<div>
 			<h2 class="text-2xl font-bold text-slate-900">상품 관리</h2>
 			<p class="mt-1 text-sm text-slate-500">
-				전체 {data.products.items.length}건 · {data.products.language === 'KO'
-					? '한국어 (KRW)'
-					: 'English (USD)'}
+				전체 {data.products.items.length}건 · {data.products.language === 'KO' ? '한국어' : 'English'}
 			</p>
 		</div>
 	</div>
@@ -79,14 +68,14 @@
 			class="flex flex-col gap-3 sm:flex-row sm:items-end"
 		>
 			<div>
-				<label for="language" class="block text-xs font-medium text-slate-500">언어/통화</label>
+				<label for="language" class="block text-xs font-medium text-slate-500">언어</label>
 				<select
 					id="language"
 					bind:value={language}
 					class="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
 				>
-					<option value="KO">한국어 (KRW)</option>
-					<option value="EN">English (USD)</option>
+					<option value="KO">한국어</option>
+					<option value="EN">English</option>
 				</select>
 			</div>
 			<div class="flex-1">
@@ -127,10 +116,6 @@
 						<th
 							class="hidden px-5 py-3 text-left text-xs font-semibold tracking-wider text-slate-400 uppercase sm:table-cell"
 							>외부 ID</th
-						>
-						<th
-							class="px-5 py-3 text-right text-xs font-semibold tracking-wider text-slate-400 uppercase"
-							>가격</th
 						>
 						<th
 							class="hidden px-5 py-3 text-left text-xs font-semibold tracking-wider text-slate-400 uppercase sm:table-cell"
@@ -188,18 +173,13 @@
 							<td class="hidden px-5 py-3 text-sm whitespace-nowrap text-slate-500 sm:table-cell">
 								<span class="font-mono text-xs">{product.external_product_id}</span>
 							</td>
-							<td
-								class="px-5 py-3 text-right text-sm font-semibold whitespace-nowrap text-slate-900"
-							>
-								{formatPrice(product.current_price, product.currency)}
-							</td>
 							<td class="hidden px-5 py-3 text-sm whitespace-nowrap text-slate-500 sm:table-cell">
 								{product.collection_source}
 							</td>
 							<td class="px-5 py-3 text-center whitespace-nowrap">
 								<a
 									aria-label="상품 링크"
-									href={resolve(product.product_url || product.original_url)}
+									href={product.product_url || product.original_url}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800"
@@ -224,7 +204,7 @@
 
 					{#if data.products.items.length === 0}
 						<tr>
-							<td colspan="6" class="px-6 py-12 text-center text-sm text-slate-500">
+							<td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">
 								상품이 없습니다.
 							</td>
 						</tr>

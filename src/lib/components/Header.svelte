@@ -2,6 +2,13 @@
 	import { sidebar } from '$lib/stores/sidebar';
 	import { page } from '$app/stores';
 
+	interface AdminProp {
+		login_id: string | null;
+		admin_id: string | null;
+	}
+
+	let { admin }: { admin?: AdminProp } = $props();
+
 	const pageTitles: Record<string, string> = {
 		'/dashboard': '대시보드',
 		'/dashboard/users': '사용자 관리',
@@ -15,6 +22,7 @@
 	};
 
 	let pageTitle = $derived(pageTitles[$page.url.pathname] ?? '대시보드');
+	let initial = $derived((admin?.login_id ?? '?').charAt(0).toUpperCase());
 </script>
 
 <header
@@ -40,6 +48,20 @@
 	</div>
 
 	<div class="flex items-center gap-4">
+		{#if admin?.login_id}
+			<div
+				class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/60 px-2.5 py-1"
+				title={admin.admin_id ?? ''}
+			>
+				<div
+					class="flex size-6 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white"
+				>
+					{initial}
+				</div>
+				<span class="text-xs font-medium text-slate-700">{admin.login_id}</span>
+			</div>
+		{/if}
+
 		<form method="POST" action="/logout">
 			<button
 				type="submit"

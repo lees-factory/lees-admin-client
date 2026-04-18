@@ -18,12 +18,30 @@ export interface APIResponse<T = unknown> {
 
 export type AppType = 'AFFILIATE' | 'DROPSHIPPING';
 export type MarketType = 'ALIEXPRESS' | 'COUPANG';
-export type BatchJobType = 'PRICE_UPDATE' | 'SKU_SNAPSHOT_UPDATE';
+export type BatchJobType = 'SKU_SNAPSHOT_UPDATE';
 export type BatchJobStatusEnum = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type TriggerType = 'MANUAL' | 'SCHEDULED';
 export type TokenStatus = 'ACTIVE' | 'EXPIRING_SOON' | 'EXPIRED' | 'NOT_FOUND';
 export type UserPlan = 'FREE';
 export type UserStatus = 'ACTIVE' | 'INACTIVE';
+export type Currency = 'KRW' | 'USD';
+export type TargetGroup = 'ALL' | 'HOT_PRODUCTS' | 'TRACKED';
+export type SessionStatusReason = 'ACTIVE' | 'REVOKED' | 'ROTATED' | 'REUSED' | 'EXPIRED';
+
+// ─── Admin Auth ─────────────────────────────────────────
+
+export interface AdminLoginRequest {
+	id: string;
+	password: string;
+}
+
+export interface AdminLoginData {
+	admin_id: string;
+	login_id: string;
+	access_token: string;
+	token_type: 'Bearer';
+	expires_at: string;
+}
 
 // ─── Batch ──────────────────────────────────────────────
 
@@ -39,6 +57,8 @@ export interface PriceUpdateRequest {
 	collection_source?: string;
 	market?: MarketType;
 	product_ids?: string[];
+	currencies?: Currency[];
+	target_group?: TargetGroup;
 	collected_before?: string;
 	force?: boolean;
 	requested_by?: string;
@@ -48,6 +68,8 @@ export interface PriceUpdateFilter {
 	collection_source?: string;
 	market?: MarketType;
 	product_ids?: string[];
+	currencies?: Currency[];
+	target_group?: TargetGroup;
 	collected_before?: string | null;
 	force?: boolean;
 }
@@ -80,7 +102,7 @@ export interface TokenGenerateRequest {
 }
 
 export interface TokenRefreshRequest {
-	app_type: AppType;
+	app_type?: AppType;
 }
 
 export interface TokenResult {
@@ -105,6 +127,8 @@ export interface TokenStatusEntry {
 export interface AdminUserLoginSession {
 	id: string;
 	user_id: string;
+	status: UserStatus;
+	status_reason: SessionStatusReason;
 	refresh_token_hash: string;
 	token_family_id: string;
 	parent_session_id?: string | null;
@@ -147,10 +171,30 @@ export interface UserListData {
 	items: AdminUser[];
 }
 
+export interface UserSessionListParams {
+	status?: UserStatus;
+	revoked?: boolean;
+	reuse_detected?: boolean;
+}
+
+export interface UserSessionListData {
+	user_id: string;
+	count: number;
+	items: AdminUserLoginSession[];
+}
+
+export interface UserSessionRevokeData {
+	user_id?: string;
+	session_id?: string;
+	token_family_id?: string;
+	revoked?: boolean;
+	revoked_count?: number;
+	operation_type?: string;
+}
+
 // ─── Products ───────────────────────────────────────────
 
 export type ProductLanguage = 'KO' | 'EN';
-export type ProductCurrency = 'KRW' | 'USD';
 
 export interface ProductListItem {
 	id: string;
@@ -159,8 +203,6 @@ export interface ProductListItem {
 	original_url: string;
 	title: string;
 	main_image_url: string;
-	current_price: string;
-	currency: ProductCurrency;
 	product_url: string;
 	collection_source: string;
 	language: ProductLanguage;

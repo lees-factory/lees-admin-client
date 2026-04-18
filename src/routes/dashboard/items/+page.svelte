@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { fade, slide } from 'svelte/transition';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -17,13 +16,13 @@
 		const params = new SvelteURLSearchParams();
 		if (marketFilter !== 'all') params.set('market', marketFilter);
 		params.set('page', '1');
-		goto(resolve(`/dashboard/items?${params.toString()}`));
+		goto(`/dashboard/items?${params.toString()}`);
 	}
 
 	function goToPage(p: number) {
 		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
-		goto(resolve(`/dashboard/items?${params.toString()}`));
+		goto(`/dashboard/items?${params.toString()}`);
 	}
 
 	function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -184,7 +183,7 @@
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-slate-800 group-hover:text-slate-900">
 							<a
-								href={resolve(item.productUrl)}
+								href={item.productUrl}
 								target="_blank"
 								rel="noopener noreferrer"
 								onclick={(e) => e.stopPropagation()}

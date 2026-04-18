@@ -1,31 +1,37 @@
-import { fail } from '@sveltejs/kit';
+import { fail, isRedirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import {
 	getBatchStatus,
 	loadHotProducts,
 	enrichHotProductSkus,
 	enrichAllSkus,
-	updateProductPrices,
 	updateSkuSnapshots
 } from '$lib/server/api/batch';
 import { ApiError } from '$lib/server/api/client';
-import type { HotProductLoadRequest, PriceUpdateRequest, MarketType } from '$lib/types/api';
+import type {
+	Currency,
+	HotProductLoadRequest,
+	MarketType,
+	PriceUpdateRequest,
+	TargetGroup
+} from '$lib/types/api';
 
-export const load: PageServerLoad = async () => {
-	const [priceResult, skuResult] = await Promise.allSettled([
-		getBatchStatus('PRICE_UPDATE'),
-		getBatchStatus('SKU_SNAPSHOT_UPDATE')
-	]);
+const VALID_CURRENCIES: Currency[] = ['KRW', 'USD'];
+const VALID_TARGET_GROUPS: TargetGroup[] = ['ALL', 'HOT_PRODUCTS', 'TRACKED'];
 
-	return {
-		batchStatus: priceResult.status === 'fulfilled' ? (priceResult.value.data ?? null) : null,
-		skuBatchStatus: skuResult.status === 'fulfilled' ? (skuResult.value.data ?? null) : null
-	};
+export const load: PageServerLoad = async (event) => {
+	try {
+		const result = await getBatchStatus('SKU_SNAPSHOT_UPDATE', event);
+		return { skuBatchStatus: result.data ?? null };
+	} catch (e) {
+		if (isRedirect(e)) throw e;
+		return { skuBatchStatus: null };
+	}
 };
 
 export const actions = {
-	loadHotProducts: async ({ request }) => {
-		const formData = await request.formData();
+	loadHotProducts: async (event) => {
+		const formData = await event.request.formData();
 		const req: HotProductLoadRequest = {};
 
 		const keywords = formData.get('keywords') as string;
@@ -45,42 +51,46 @@ export const actions = {
 		if (maxPrice) req.max_sale_price = maxPrice;
 
 		try {
-			const result = await loadHotProducts(req);
+			const result = await loadHotProducts(req, event);
 			return { success: true, action: 'loadHotProducts', message: result.data?.message };
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : '인기 상품 적재에 실패했습니다.';
 			return fail(500, { error: msg });
 		}
 	},
 
-	enrichHotProductSkus: async () => {
+	enrichHotProductSkus: async (event) => {
 		try {
-			const result = await enrichHotProductSkus();
+			const result = await enrichHotProductSkus(event);
 			return { success: true, action: 'enrichHotProductSkus', message: result.data?.message };
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : 'SKU 보강에 실패했습니다.';
 			return fail(500, { error: msg });
 		}
 	},
 
-	enrichAllSkus: async () => {
+	enrichAllSkus: async (event) => {
 		try {
-			const result = await enrichAllSkus();
+			const result = await enrichAllSkus(event);
 			return { success: true, action: 'enrichAllSkus', message: result.data?.message };
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : '전체 SKU 보강에 실패했습니다.';
 			return fail(500, { error: msg });
 		}
 	},
 
-	updateProductPrices: async ({ request }) => {
-		const formData = await request.formData();
+	updateSkuSnapshots: async (event) => {
+		const formData = await event.request.formData();
 		const req: PriceUpdateRequest = {};
 
 		const collectionSource = formData.get('collection_source') as string;
 		const market = formData.get('market') as string;
 		const productIds = formData.get('product_ids') as string;
-		const collectedBefore = formData.get('collected_before') as string;
+		const targetGroupRaw = formData.get('target_group') as string;
+		const currenciesRaw = formData.getAll('currencies') as string[];
 		const force = formData.get('force');
 		const requestedBy = formData.get('requested_by') as string;
 
@@ -91,46 +101,18 @@ export const actions = {
 				.split(',')
 				.map((s) => s.trim())
 				.filter(Boolean);
-		if (collectedBefore) req.collected_before = collectedBefore;
-		if (force === 'on') req.force = true;
-		if (requestedBy) req.requested_by = requestedBy;
-
-		try {
-			const result = await updateProductPrices(req);
-			return {
-				success: true,
-				action: 'updateProductPrices',
-				message: result.data?.message,
-				job: result.data?.job
-			};
-		} catch (e) {
-			const msg = e instanceof ApiError ? e.message : '가격 갱신에 실패했습니다.';
-			return fail(500, { error: msg });
+		if (targetGroupRaw && VALID_TARGET_GROUPS.includes(targetGroupRaw as TargetGroup)) {
+			req.target_group = targetGroupRaw as TargetGroup;
 		}
-	},
-
-	updateSkuSnapshots: async ({ request }) => {
-		const formData = await request.formData();
-		const req: PriceUpdateRequest = {};
-
-		const collectionSource = formData.get('collection_source') as string;
-		const market = formData.get('market') as string;
-		const productIds = formData.get('product_ids') as string;
-		const force = formData.get('force');
-		const requestedBy = formData.get('requested_by') as string;
-
-		if (collectionSource) req.collection_source = collectionSource;
-		if (market) req.market = market as MarketType;
-		if (productIds)
-			req.product_ids = productIds
-				.split(',')
-				.map((s) => s.trim())
-				.filter(Boolean);
+		const currencies = currenciesRaw.filter((c): c is Currency =>
+			VALID_CURRENCIES.includes(c as Currency)
+		);
+		if (currencies.length > 0) req.currencies = currencies;
 		if (force === 'on') req.force = true;
 		if (requestedBy) req.requested_by = requestedBy;
 
 		try {
-			const result = await updateSkuSnapshots(req);
+			const result = await updateSkuSnapshots(req, event);
 			return {
 				success: true,
 				action: 'updateSkuSnapshots',
@@ -138,6 +120,7 @@ export const actions = {
 				job: result.data?.job
 			};
 		} catch (e) {
+			if (isRedirect(e)) throw e;
 			const msg = e instanceof ApiError ? e.message : 'SKU snapshot 갱신에 실패했습니다.';
 			return fail(500, { error: msg });
 		}

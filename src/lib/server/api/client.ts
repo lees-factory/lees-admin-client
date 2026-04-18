@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_URL, ADMIN_API_KEY } from '$env/static/private';
+import { redirect, type RequestEvent } from '@sveltejs/kit';
 import type { APIResponse } from '$lib/types/api';
 
 // ─── PascalCase → snake_case 정규화 ─────────────────────
@@ -41,6 +42,18 @@ class ApiError extends Error {
 	}
 }
 
+export interface RequestOptions {
+	/**
+	 * SvelteKit RequestEvent. 전달되면 locals.bearerToken을 자동 주입하고,
+	 * 401 응답 시 세션 쿠키를 정리 후 /login으로 redirect를 throw한다.
+	 */
+	event?: Pick<RequestEvent, 'locals' | 'cookies'>;
+	/** event.locals.bearerToken을 사용하지 않고 명시적으로 토큰을 지정할 때 */
+	bearerToken?: string;
+	/** admin login처럼 인증이 필요 없는 엔드포인트 호출 시 true */
+	skipApiKey?: boolean;
+}
+
 function buildUrl(path: string, params?: Record<string, string>): string {
 	const url = new URL(path, ADMIN_API_BASE_URL);
 	if (params) {
@@ -53,19 +66,38 @@ function buildUrl(path: string, params?: Record<string, string>): string {
 	return url.toString();
 }
 
-function headers(): HeadersInit {
-	return {
-		'Content-Type': 'application/json',
-		'X-Admin-API-Key': ADMIN_API_KEY
+function headers(opts?: RequestOptions): HeadersInit {
+	const h: Record<string, string> = {
+		'Content-Type': 'application/json'
 	};
+	if (!opts?.skipApiKey) {
+		h['X-Admin-API-Key'] = ADMIN_API_KEY;
+	}
+	const bearer = opts?.bearerToken ?? opts?.event?.locals.bearerToken;
+	if (bearer) {
+		h['Authorization'] = `Bearer ${bearer}`;
+	}
+	return h;
 }
 
-async function handleResponse<T>(res: Response): Promise<APIResponse<T>> {
-	const raw = await res.json();
+async function handleResponse<T>(res: Response, opts?: RequestOptions): Promise<APIResponse<T>> {
+	// 백엔드가 세션 토큰을 거부(만료/revoke)했을 때: 쿠키 정리 후 강제 로그아웃.
+	// event가 있고 요청이 Bearer 기반일 때만 자동 리다이렉트(login 호출 등은 제외).
+	if (res.status === 401 && opts?.event && !opts.skipApiKey) {
+		opts.event.cookies.delete('session', { path: '/' });
+		throw redirect(303, '/login?reason=expired');
+	}
+
+	const raw = await res.json().catch(() => ({}));
 	const body = normalizeKeys(raw) as APIResponse<T>;
 
-	if (!res.ok && body.error) {
-		throw new ApiError(res.status, body.error.code, body.error.message);
+	if (!res.ok) {
+		const err = body?.error;
+		throw new ApiError(
+			res.status,
+			err?.code ?? `HTTP_${res.status}`,
+			err?.message ?? `Request failed with status ${res.status}`
+		);
 	}
 
 	return body;
@@ -73,22 +105,27 @@ async function handleResponse<T>(res: Response): Promise<APIResponse<T>> {
 
 export async function apiGet<T>(
 	path: string,
-	params?: Record<string, string>
+	params?: Record<string, string>,
+	opts?: RequestOptions
 ): Promise<APIResponse<T>> {
 	const res = await fetch(buildUrl(path, params), {
 		method: 'GET',
-		headers: headers()
+		headers: headers(opts)
 	});
-	return handleResponse<T>(res);
+	return handleResponse<T>(res, opts);
 }
 
-export async function apiPost<T>(path: string, body?: unknown): Promise<APIResponse<T>> {
+export async function apiPost<T>(
+	path: string,
+	body?: unknown,
+	opts?: RequestOptions
+): Promise<APIResponse<T>> {
 	const res = await fetch(buildUrl(path), {
 		method: 'POST',
-		headers: headers(),
+		headers: headers(opts),
 		body: body !== undefined ? JSON.stringify(body) : undefined
 	});
-	return handleResponse<T>(res);
+	return handleResponse<T>(res, opts);
 }
 
 export { ApiError };

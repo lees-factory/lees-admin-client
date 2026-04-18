@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { resolve } from '$app/paths';
 
 	let { data } = $props();
 
@@ -295,7 +294,7 @@
 					<h3 class="text-sm font-semibold text-slate-900">최근 수집 실패</h3>
 				</div>
 				<a
-					href={resolve('/dashboard/monitoring?status=failed')}
+					href="/dashboard/monitoring?status=failed"
 					class="text-xs font-semibold text-blue-600 hover:text-blue-500">전체 보기 &rarr;</a
 				>
 			</div>
@@ -332,7 +331,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<a
-									href={resolve(log.productUrl)}
+									href={log.productUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="group/link flex items-center gap-1 truncate text-sm font-medium text-slate-700 hover:text-blue-600 hover:underline"
@@ -367,7 +366,7 @@
 				<div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
 					<h3 class="text-sm font-semibold text-slate-900">토큰 상태</h3>
 					<a
-						href={resolve('/dashboard/tokens')}
+						href="/dashboard/tokens"
 						class="text-xs font-semibold text-blue-600 hover:text-blue-500">관리 &rarr;</a
 					>
 				</div>
@@ -440,7 +439,7 @@
 				<div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
 					<h3 class="text-sm font-semibold text-slate-900">핫프로덕트 현황</h3>
 					<a
-						href={resolve('/dashboard/hot-products')}
+						href="/dashboard/hot-products"
 						class="text-xs font-semibold text-blue-600 hover:text-blue-500">관리 &rarr;</a
 					>
 				</div>
@@ -486,7 +485,7 @@
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 		{#each quickLinks as link (link.href)}
 			<a
-				href={resolve(link.href)}
+				href={link.href}
 				class="group flex flex-col rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300 hover:shadow-sm"
 			>
 				<div

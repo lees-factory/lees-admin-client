@@ -9,7 +9,6 @@
 	const tabs = [
 		{ id: 'hot-products', label: '인기상품 적재', icon: 'fire' },
 		{ id: 'sku', label: 'SKU 보강', icon: 'cube' },
-		{ id: 'price', label: '가격 갱신', icon: 'currency' },
 		{ id: 'sku-snapshot', label: 'SKU Snapshot', icon: 'snapshot' }
 	] as const;
 
@@ -76,10 +75,9 @@
 		});
 	}
 
-	let priceJob = $derived(data.batchStatus as BatchJobStatus | null);
 	let skuJob = $derived(data.skuBatchStatus as BatchJobStatus | null);
 
-	let activeJob = $derived(activeTab === 'sku-snapshot' ? skuJob : priceJob);
+	let activeJob = $derived(skuJob);
 
 	let progressPercent = $derived(
 		activeJob && activeJob.total_count > 0
@@ -384,103 +382,6 @@
 					</div>
 				</div>
 
-				<!-- 가격 갱신 -->
-			{:else if activeTab === 'price'}
-				<div class="space-y-6">
-					<div>
-						<h3 class="text-base font-semibold text-slate-900">가격 갱신</h3>
-						<p class="mt-1 text-xs text-slate-500">
-							대상 상품의 가격을 AliExpress API에서 다시 조회하여 product_variant와
-							product_price_history, product_price_snapshot을 갱신합니다.
-						</p>
-					</div>
-
-					<form
-						method="POST"
-						action="?/updateProductPrices"
-						use:enhance={() => {
-							loading = 'updateProductPrices';
-							return async ({ update }) => {
-								await update();
-							};
-						}}
-					>
-						<div class="grid gap-4 sm:grid-cols-2">
-							<div>
-								<label
-									for="price_collection_source"
-									class="block text-xs font-medium text-slate-500">수집 경로</label
-								>
-								<input
-									id="price_collection_source"
-									name="collection_source"
-									type="text"
-									placeholder="e.g. HOT_PRODUCT_QUERY (선택)"
-									class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-								/>
-							</div>
-							<div>
-								<label for="price_market" class="block text-xs font-medium text-slate-500"
-									>마켓</label
-								>
-								<select
-									id="price_market"
-									name="market"
-									class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-								>
-									<option value="">전체</option>
-									<option value="ALIEXPRESS">AliExpress</option>
-									<option value="COUPANG">Coupang</option>
-								</select>
-							</div>
-							<div>
-								<label for="price_product_ids" class="block text-xs font-medium text-slate-500"
-									>상품 ID (내부 ID)</label
-								>
-								<input
-									id="price_product_ids"
-									name="product_ids"
-									type="text"
-									placeholder="쉼표 구분 (선택)"
-									class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-								/>
-							</div>
-							<div>
-								<label for="price_collected_before" class="block text-xs font-medium text-slate-500"
-									>수집 시각 이전</label
-								>
-								<input
-									id="price_collected_before"
-									name="collected_before"
-									type="datetime-local"
-									class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-								/>
-							</div>
-						</div>
-						<div class="mt-4 flex items-center gap-2">
-							<input
-								id="price_force"
-								name="force"
-								type="checkbox"
-								class="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-							/>
-							<label for="price_force" class="text-xs font-medium text-slate-500"
-								>강제 갱신 (최근 갱신된 상품 포함)</label
-							>
-						</div>
-						<input type="hidden" name="requested_by" value="admin" />
-						<div class="mt-5 flex justify-end">
-							<button
-								type="submit"
-								disabled={loading === 'updateProductPrices'}
-								class="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
-							>
-								{loading === 'updateProductPrices' ? '실행 중...' : '가격 갱신 실행'}
-							</button>
-						</div>
-					</form>
-				</div>
-
 				<!-- SKU Snapshot 갱신 -->
 			{:else if activeTab === 'sku-snapshot'}
 				<div class="space-y-6">
@@ -505,8 +406,49 @@
 					>
 						<div class="grid gap-4 sm:grid-cols-2">
 							<div>
+								<label for="sku_target_group" class="block text-xs font-medium text-slate-500"
+									>대상 그룹</label
+								>
+								<select
+									id="sku_target_group"
+									name="target_group"
+									class="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+								>
+									<option value="ALL">전체 (ALL)</option>
+									<option value="HOT_PRODUCTS">인기 상품 (HOT_PRODUCTS)</option>
+									<option value="TRACKED">추적 상품 (TRACKED)</option>
+								</select>
+							</div>
+							<div>
+								<span class="block text-xs font-medium text-slate-500">통화</span>
+								<div class="mt-1 flex gap-4 py-2">
+									<label class="flex items-center gap-2 text-sm text-slate-700">
+										<input
+											type="checkbox"
+											name="currencies"
+											value="KRW"
+											checked
+											class="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+										/>
+										KRW
+									</label>
+									<label class="flex items-center gap-2 text-sm text-slate-700">
+										<input
+											type="checkbox"
+											name="currencies"
+											value="USD"
+											class="size-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+										/>
+										USD
+									</label>
+								</div>
+								<p class="text-[11px] text-slate-400">
+									저사양 환경에선 KRW/USD를 분리 실행 권장
+								</p>
+							</div>
+							<div>
 								<label for="sku_collection_source" class="block text-xs font-medium text-slate-500"
-									>수집 경로</label
+									>수집 경로 필터</label
 								>
 								<input
 									id="sku_collection_source"
@@ -529,9 +471,9 @@
 									<option value="COUPANG">Coupang</option>
 								</select>
 							</div>
-							<div>
+							<div class="sm:col-span-2">
 								<label for="sku_product_ids" class="block text-xs font-medium text-slate-500"
-									>상품 ID (내부 ID)</label
+									>상품 ID (내부 ID, target_group보다 우선)</label
 								>
 								<input
 									id="sku_product_ids"
@@ -570,7 +512,7 @@
 	<!-- 최근 배치 상태 -->
 	<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 		<h3 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">
-			최근 실행 결과 {activeTab === 'sku-snapshot' ? '(SKU Snapshot)' : '(가격 갱신)'}
+			최근 실행 결과 (SKU Snapshot)
 		</h3>
 
 		{#if activeJob && activeJob.status}

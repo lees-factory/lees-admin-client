@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
@@ -30,13 +29,13 @@
 		const params = new SvelteURLSearchParams();
 		if (market !== 'all') params.set('market', market);
 		params.set('page', '1');
-		goto(resolve(`/dashboard/hot-products?${params.toString()}`));
+		goto(`/dashboard/hot-products?${params.toString()}`);
 	}
 
 	function goToPage(p: number) {
 		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
-		goto(resolve(`/dashboard/hot-products?${params.toString()}`));
+		goto(`/dashboard/hot-products?${params.toString()}`);
 	}
 
 	function getPageNumbers(current: number, total: number): (number | '...')[] {
@@ -201,7 +200,7 @@
 							</td>
 							<td class="max-w-[280px] px-5 py-3.5">
 								<a
-									href={resolve(product.productUrl)}
+									href={product.productUrl}
 									target="_blank"
 									rel="noopener noreferrer"
 									class="group/link flex items-center gap-1 truncate text-sm font-medium text-slate-800 hover:text-blue-600 hover:underline"

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { sidebar } from '$lib/stores/sidebar';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 
 	const menuSections = [
@@ -137,7 +136,7 @@
 
 				{#each section.items as item (item.href)}
 					<a
-						href={resolve(item.href)}
+						href={item.href}
 						class="group relative flex items-center rounded-lg px-2 py-2.5 text-sm font-medium transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500
                         {isCurrent(item.href)
 							? 'bg-blue-600/10 text-blue-400'

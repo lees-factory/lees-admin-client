@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, isRedirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { listUsers } from '$lib/server/api/users';
 import type { UserPlan, UserStatus } from '$lib/types/api';
@@ -6,7 +6,10 @@ import type { UserPlan, UserStatus } from '$lib/types/api';
 const VALID_PLANS: (UserPlan | 'all')[] = ['all', 'FREE'];
 const VALID_STATUSES: (UserStatus | 'all')[] = ['all', 'ACTIVE', 'INACTIVE'];
 
-export const load: PageServerLoad = async ({ url }) => {
+// 세션 revoke 액션은 /dashboard/users/[user_id]로 이관.
+// 이 페이지는 목록 조회 전용.
+export const load: PageServerLoad = async (event) => {
+	const { url } = event;
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1') || 1);
 	const pageSize = Math.max(
 		1,
@@ -24,19 +27,23 @@ export const load: PageServerLoad = async ({ url }) => {
 		| 'all';
 
 	try {
-		const result = await listUsers({
-			page,
-			page_size: pageSize,
-			search: search || undefined,
-			plan: plan !== 'all' ? plan : undefined,
-			status: status !== 'all' ? status : undefined
-		});
+		const result = await listUsers(
+			{
+				page,
+				page_size: pageSize,
+				search: search || undefined,
+				plan: plan !== 'all' ? plan : undefined,
+				status: status !== 'all' ? status : undefined
+			},
+			event
+		);
 
 		return {
 			users: result.data!,
 			filters: { search, plan, status }
 		};
-	} catch {
+	} catch (e) {
+		if (isRedirect(e)) throw e;
 		throw error(500, '사용자 데이터를 불러오는데 실패했습니다.');
 	}
 };
