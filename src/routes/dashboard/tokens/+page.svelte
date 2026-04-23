@@ -10,7 +10,6 @@
 	let loading = $state<string | null>(null);
 	let pendingAuthorize = $state<{
 		appType: AppType;
-		url: string;
 		popupBlocked: boolean;
 	} | null>(null);
 	let refreshingStatus = $state(false);
@@ -114,20 +113,16 @@
 						진행 중
 					</h3>
 					<p class="mt-1 text-sm text-slate-600">
-						{#if pendingAuthorize.popupBlocked}
-							팝업이 차단되어 새 탭이 열리지 않았습니다. 아래 링크를 눌러 AliExpress 승인 페이지로
-							이동하세요.
-						{:else}
-							새 탭에서 AliExpress 판매자 승인을 완료하면 callback이 자동으로 토큰을 저장합니다.
-						{/if}
+						새 탭에서 AliExpress 판매자 승인을 완료하면 callback이 자동으로 토큰을 저장합니다. 승인
+						완료 후 "상태 새로고침"을 누르세요.
 					</p>
 					<a
-						href={pendingAuthorize.url}
+						href="/dashboard/tokens/authorize?app_type={pendingAuthorize.appType}"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
 					>
-						승인 페이지 열기
+						승인 페이지 다시 열기
 						<svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
 							<path
 								fill-rule="evenodd"
@@ -269,58 +264,17 @@
 							</button>
 						</form>
 					{/if}
-					<form
-						method="POST"
-						action="?/authorize"
-						class="flex-1"
-						use:enhance={() => {
-							loading = `authorize-${appType}`;
-							// user gesture가 살아있는 동안 빈 탭을 먼저 연다.
-							// 이후 서버 응답이 오면 이 탭의 location을 authorization_url로 교체.
-							const popup = window.open('about:blank', '_blank');
-							return async ({ result }) => {
-								loading = null;
-								if (result.type === 'success' && result.data?.success) {
-									const authData = result.data.data as
-										| { authorization_url?: string }
-										| undefined;
-									const url = authData?.authorization_url;
-									if (url) {
-										if (popup && !popup.closed) {
-											popup.location.href = url;
-											pendingAuthorize = { appType, url, popupBlocked: false };
-											showToast(
-												'승인 창을 열었습니다. 완료 후 상태 새로고침을 눌러주세요.',
-												'success'
-											);
-										} else {
-											pendingAuthorize = { appType, url, popupBlocked: true };
-											showToast('팝업이 차단되었습니다. 아래 링크를 클릭하세요.', 'error');
-										}
-									} else {
-										popup?.close();
-										showToast('authorization_url을 받지 못했습니다.', 'error');
-									}
-								} else if (result.type === 'failure') {
-									popup?.close();
-									const err = (result.data as { error?: string } | undefined)?.error;
-									showToast(err ?? '인가 URL 생성에 실패했습니다.', 'error');
-								} else if (result.type === 'error') {
-									popup?.close();
-									showToast(result.error?.message ?? '요청 실패', 'error');
-								}
-							};
+					<a
+						href="/dashboard/tokens/authorize?app_type={appType}"
+						target="_blank"
+						rel="noopener noreferrer"
+						onclick={() => {
+							pendingAuthorize = { appType, popupBlocked: false };
 						}}
+						class="flex-1 rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
 					>
-						<input type="hidden" name="app_type" value={appType} />
-						<button
-							type="submit"
-							disabled={loading === `authorize-${appType}`}
-							class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50"
-						>
-							{loading === `authorize-${appType}` ? '생성 중...' : 'OAuth 인증'}
-						</button>
-					</form>
+						OAuth 인증
+					</a>
 				</div>
 			</div>
 		{/each}
