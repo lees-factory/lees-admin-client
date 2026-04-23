@@ -275,6 +275,9 @@
 						class="flex-1"
 						use:enhance={() => {
 							loading = `authorize-${appType}`;
+							// user gesture가 살아있는 동안 빈 탭을 먼저 연다.
+							// 이후 서버 응답이 오면 이 탭의 location을 authorization_url로 교체.
+							const popup = window.open('about:blank', '_blank');
 							return async ({ result }) => {
 								loading = null;
 								if (result.type === 'success' && result.data?.success) {
@@ -283,25 +286,27 @@
 										| undefined;
 									const url = authData?.authorization_url;
 									if (url) {
-										const opened = window.open(url, '_blank', 'noopener,noreferrer');
-										pendingAuthorize = {
-											appType,
-											url,
-											popupBlocked: !opened
-										};
-										showToast(
-											opened
-												? '승인 창을 열었습니다. 완료 후 상태 새로고침을 눌러주세요.'
-												: '팝업이 차단되었습니다. 아래 링크를 클릭하세요.',
-											opened ? 'success' : 'error'
-										);
+										if (popup && !popup.closed) {
+											popup.location.href = url;
+											pendingAuthorize = { appType, url, popupBlocked: false };
+											showToast(
+												'승인 창을 열었습니다. 완료 후 상태 새로고침을 눌러주세요.',
+												'success'
+											);
+										} else {
+											pendingAuthorize = { appType, url, popupBlocked: true };
+											showToast('팝업이 차단되었습니다. 아래 링크를 클릭하세요.', 'error');
+										}
 									} else {
+										popup?.close();
 										showToast('authorization_url을 받지 못했습니다.', 'error');
 									}
 								} else if (result.type === 'failure') {
+									popup?.close();
 									const err = (result.data as { error?: string } | undefined)?.error;
 									showToast(err ?? '인가 URL 생성에 실패했습니다.', 'error');
 								} else if (result.type === 'error') {
+									popup?.close();
 									showToast(result.error?.message ?? '요청 실패', 'error');
 								}
 							};
