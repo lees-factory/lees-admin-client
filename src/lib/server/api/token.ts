@@ -2,6 +2,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { apiGet, apiPost } from './client';
 import type {
 	AppType,
+	AuthorizeUrlData,
 	TokenGenerateRequest,
 	TokenRefreshRequest,
 	TokenResult,
@@ -17,7 +18,11 @@ export function generateToken(req: TokenGenerateRequest, event: Ev) {
 
 /** GET /v1/aliexpress/oauth/authorize-url — OAuth 인가 URL 생성 */
 export function getAuthorizeUrl(appType: AppType, event: Ev) {
-	return apiGet<unknown>('/v1/aliexpress/oauth/authorize-url', { app_type: appType }, { event });
+	return apiGet<AuthorizeUrlData>(
+		'/v1/aliexpress/oauth/authorize-url',
+		{ app_type: appType },
+		{ event }
+	);
 }
 
 /** POST /v1/aliexpress/token/refresh — 토큰 수동 갱신 */

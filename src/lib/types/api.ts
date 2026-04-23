@@ -112,6 +112,11 @@ export interface TokenResult {
 	refresh_token_expires_at?: string | null;
 }
 
+export interface AuthorizeUrlData {
+	authorization_url: string;
+	callback_url: string;
+}
+
 export interface TokenStatusEntry {
 	app_type: AppType;
 	seller_id?: string;
